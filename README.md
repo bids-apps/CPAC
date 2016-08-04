@@ -35,6 +35,9 @@ This App has the following command line arguments:
 
 		usage: run.py [-h]
 		              [--participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
+                      [--n_cpus #]
+                      [--mem #]
+                      [--save_working_directory]
 		              bids_dir output_dir {participant,group}
 
 		Example BIDS App entrypoint script.
