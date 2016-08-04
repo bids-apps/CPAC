@@ -15,8 +15,7 @@ ENV FSLBROWSER /etc/alternatives/x-www-browser
 ENV ANTSPATH /opt/ants/bin/
 ENV DYLD_FALLBACK_LIBRARY_PATH /opt/afni
 ENV LD_LIBRARY_PATH /usr/lib/fsl/5.0:${LD_LIBRARY_PATH}
-ENV PATH /code:/opt/c3d/bin:/opt/ants/bin:/opt/afni:/usr/share/fsl/5.0/bin\
-    :/usr/local/bin/miniconda/bin:${PATH} 
+ENV PATH /code:/opt/c3d/bin:/opt/ants/bin:/opt/afni:${FSLDIR}/bin:/usr/local/bin/miniconda/bin:${PATH} 
 
 RUN mkdir /scratch && mkdir /local-scratch && mkdir -p /code && mkdir -p /cpac_resources
 COPY cpac_install.sh /tmp/cpac_install.sh
@@ -25,7 +24,8 @@ RUN /tmp/cpac_install.sh -p
 RUN /tmp/cpac_install.sh -n afni
 RUN /tmp/cpac_install.sh -n fsl
 RUN /tmp/cpac_install.sh -n c3d
-RUN /tmp/cpac_install.sh -n ants
+#RUN /tmp/cpac_install.sh -n ants
+RUN apt-get install -y ants
 RUN /tmp/cpac_install.sh -n cpac
 
 COPY run.py /code/run.py
