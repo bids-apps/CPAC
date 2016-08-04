@@ -7,6 +7,9 @@ from glob import glob
 from subprocess import Popen, PIPE
 from shutil import rmtree
 import subprocess
+import yaml
+import CPAC.utils as cpac_utils
+
 
 def run(command, env={}):
     process = Popen(command, stdout=PIPE, stderr=subprocess.STDOUT,
@@ -18,8 +21,7 @@ def run(command, env={}):
         if line == '' and process.poll() != None:
             break
 
-parser = argparse.ArgumentParser(
-    description='C-PAC Pipeline Runner')
+parser = argparse.ArgumentParser(description='C-PAC Pipeline Runner')
 parser.add_argument('bids_dir', help='The directory with the input dataset '
     'formatted according to the BIDS standard.')
 parser.add_argument('output_dir', help='The directory where the output files '
@@ -35,12 +37,25 @@ parser.add_argument('--participant_label', help='The label of the participant'
     'corresponds to sub-<participant_label> from the BIDS spec '
     '(so it does not include "sub-"). If this parameter is not '
     'provided all subjects should be analyzed. Multiple '
-    'participants can be specified with a space separated list.',
-    nargs="+")
-parser.add_argument('--template_name', help='Name for the custom group level '
-    ' template generated for this dataset', default="newtemplate")
+    'participants can be specified with a space separated list.', nargs="+")
+parser.add_argument('--pipeline_file', help='Name for the pipeline '
+    ' configuration file to use',
+    default="/cpac_resources/default_pipeline.yaml")
+parser.add_argument('--n_cpus', help='Number of execution '
+    ' resources available for the pipeline', default="1")
+parser.add_argument('--mem', help='Amount of RAM available to the pipeline'
+    '(GB).', default="6")
+parser.add_argument('--save_working_dir', action='store_true',
+    help='Save the contents of the working directory.', default=False)
 
+# get the command line arguments
 args = parser.parse_args()
+
+# get and set configuration
+c = cpac_utils.Configuration(yaml.load(open(os.path.realpath(config), 'r')))
+
+print c
+exit(1)
 
 subjects_to_analyze = []
 # only for a subset of subjects
@@ -68,6 +83,32 @@ if args.analysis_level == "participant":
         if os.path.exists(os.path.join(args.output_dir, subject_label)):
             rmtree(os.path.join(args.output_dir, subject_label))
         run(cmd)
+
+   # Import packages
+    import commands
+    commands.getoutput('source ~/.bashrc')
+    import yaml
+    
+    
+    # Try and load in the subject list
+    try:
+        sublist = yaml.load(open(os.path.realpath(subject_list_file), 'r'))
+    except:
+        raise Exception ("Subject list is not in proper YAML format. Please check your file")
+    
+    # Grab the subject of interest
+    sub_dict = sublist[int(indx)-1]
+    sub_id = sub_dict['subject_id']
+
+    try:
+        # Build and run the pipeline
+        prep_workflow(sub_dict, c, pickle.load(open(strategies, 'r')), 1, p_name, plugin=plugin, plugin_args=plugin_args)
+    except Exception as e:
+        print 'Could not complete cpac run for subject: %s!' % sub_id
+        print 'Error: %s' % e
+
+
+
 elif args.analysis_level == "group":
     # running group level
     # generate study specific template
