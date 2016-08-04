@@ -26,13 +26,12 @@ centos7_packages=("mesa-libGLU-9.0.0-4.el7.x86_64" "gsl-1.15-13.el7.x86_64"\
     "libcanberra-gtk2" "libxml-devel" "libpng12.x86_64")
 
 # are all of the ubuntu packages the same regardless of the version?
-ubuntu_packages=("cmake" "git" "make" "unzip" "libcanberra-gtk-module" "libxp6"\
-    "netpbm" "libglu1-mesa" "gsl-bin" "zlib1g-dev" "graphviz" "graphviz-dev"\
-    "pkg-config" "libxft2" "libxml2" "libxml2-dev" "libxslt1-dev" "build-essential")
-
-python_packages=("cython" "numpy" "scipy" "matplotlib" "networkx" "traits" "yaml"\
-    "jinja2" "nose" "pip" "lockfile" "pygraphviz" "nibabel" "nipype" "wx" "prov"\
-    "future" "simplejson" "memory_profiler" "psutil")
+ubuntu_packages=("cmake" "git" "graphviz" "graphviz-dev" "gsl-bin" "libcanberra-gtk-module" \
+    "libexpat1-dev" "libgiftiio-dev" "libglib2.0-dev" "libglu1-mesa" "libglu1-mesa-dev" \
+    "libgsl0-dev" "libjpeg-progs" "libmotif-dev" "libxml2" "libxml2-dev" "libxext-dev" \
+    "libxft2" "libxft-dev" "libxi-dev" "libxmu-headers" "libxmu-dev" "libxpm-dev" "libxslt1-dev" \
+    "libxp6" "libxp-dev" "make" "mesa-common-dev" "mesa-utils" "netpbm" "pkg-config" \
+    "build-essential" "xvfb" "xauth" "libgl1-mesa-dri" "tcsh" "unzip" "zlib1g-dev" "m4")
 
 conda_packages=("cython" "numpy" "scipy" "matplotlib" "networkx" "traits" "pyyaml"\
     "jinja2" "nose" "ipython" "pip" "wxpython")
@@ -49,6 +48,8 @@ function set_system_deps {
     then
         # add in the packages that are common to all
         system_pkgs=${centos_packages[@]}
+
+        yum update -y && yum install -y wget
 
         # add in the packages that are specific to the redhat-release
         version=$(rpm -q --queryformat '%{VERSION}' centos-release)
@@ -73,6 +74,9 @@ function set_system_deps {
         esac
     elif [ $DISTRO == 'UBUNTU' ]
     then
+        # take care of initing apt-get and installing wget
+        echo "!!!!!! CC"
+        apt-get update && apt-get upgrade -y && apt-get install -y wget
         system_pkgs=${ubuntu_packages[@]}
     else
         echo "Unknown distribution ${DISTRO}"
@@ -136,42 +140,74 @@ function install_system_dependencies {
             version=$(rpm -q --queryformat '%{VERSION}' centos-release)
 
             # update the repositories
-            yum update -y
+            #yum update -y
             cd /tmp && wget ${epel_url} && rpm -Uvh ${epel_rpm}
 
-            for p in ${missing_system_dependencies[@]}
-            do
-                yum install -y ${p}
-                if [ $? -ne 0 ]
-                then
-                    system_dependencies_installed=0
-                    echo "failed to install package: ${p}"
-                    echo "[ $(date) ] : Failed to install C-PAC system dependency $p" \
-                        >> ~/cpac.log
-		else
-                    echo "[ $(date) ] : Installed C-PAC system dependency $p" \
-                        >> ~/cpac.log
-                fi
-            done
+            yum install -y ${missing_system_dependencies[@]} 
+            if [ $? -ne 0 ]
+            then
+                system_dependencies_installed=0
+                echo "[ $(date) ] yum failed to install packages: ${missing_system_dependencies[@]}"
+                echo "[ $(date) ] yum failed to install packages: ${missing_system_dependencies[@]}" \
+                    >> ~/cpac.log
+            else	
+                echo "[ $(date) ] : yum Installed C-PAC system dependency"\
+                    "${missing_system_dependencies[@]}"
+                echo "[ $(date) ] : yum Installed C-PAC system dependency"
+                    "${missing_system_dependencies[@]}" \
+                    >> ~/cpac.log
+            fi
+            #for p in ${missing_system_dependencies[@]}
+            #do
+                #echo "[ $(date) ] : Installing C-PAC system dependency $p"
+                #yum install -y ${p}
+                #if [ $? -ne 0 ]
+                #then
+                    #system_dependencies_installed=0
+                    #echo "failed to install package: ${p}"
+                    #echo "[ $(date) ] : Failed to install C-PAC system dependency $p" \
+                        #>> ~/cpac.log
+		#else
+                    #echo "[ $(date) ] : Installed C-PAC system dependency $p"
+                    #echo "[ $(date) ] : Installed C-PAC system dependency $p" \
+                        #>> ~/cpac.log
+                #fi
+            #done
         elif [ $DISTRO == 'UBUNTU' ]
         then
-            apt-get update
-            apt-get upgrade -y
+            #apt-get update
+            #apt-get upgrade -y
 
-            for p in ${missing_system_dependencies[@]}
-            do
-                apt-get install -y ${p}
-                if [ $? -ne 0 ]
-                then
-                    system_dependencies_installed=0
-                    echo "failed to install package: ${p}"
-                    echo "[ $(date) ] : Failed to install C-PAC system dependency $p" \
-                        >> ~/cpac.log
-		else
-                    echo "[ $(date) ] : Installed C-PAC system dependency $p" \
-                        >> ~/cpac.log
-                fi
-            done
+            apt-get install -y ${missing_system_dependencies[@]} 
+            if [ $? -ne 0 ]
+            then
+                system_dependencies_installed=0
+                echo "[ $(date) ] apt-get failed to install packages: ${missing_system_dependencies[@]}"
+                echo "[ $(date) ] apt-get failed to install packages: ${missing_system_dependencies[@]}" \
+                    >> ~/cpac.log
+            else	
+                echo "[ $(date) ] : apt-get Installed C-PAC system dependency"\
+                    "${missing_system_dependencies[@]}"
+                echo "[ $(date) ] : apt-get Installed C-PAC system dependency"
+                    "${missing_system_dependencies[@]}" \
+                    >> ~/cpac.log
+            fi
+           # for p in ${missing_system_dependencies[@]}
+           # do
+           #     echo "[ $(date) ] : Installing C-PAC system dependency $p"
+           #     apt-get install -y ${p}
+           #     if [ $? -ne 0 ]
+           #     then
+           #         system_dependencies_installed=0
+           #         echo "failed to install package: ${p}"
+           #         echo "[ $(date) ] : Failed to install C-PAC system dependency $p" \
+           #             >> ~/cpac.log
+	   #     else
+           #         echo "[ $(date) ] : Installed C-PAC system dependency $p" 
+           #         echo "[ $(date) ] : Installed C-PAC system dependency $p" \
+           #             >> ~/cpac.log
+           #     fi
+           # done
             # finish up
             apt-get autoremove -y
         else
@@ -308,27 +344,43 @@ function install_python_dependencies {
     # for docker dont install virtualenv
     #conda create -y -n cpac python
     #source activate cpac
-    for p in ${conda_packages[@]}
-    do
-        conda install -y ${p}
-        if [ $? -ne 0 ]
-        then
-            echo "[ $(date) ] Conda install ${p} failed!"
-            echo "[ $(date) ] Conda install ${p} failed!" >> ~/cpac.log
-            return 
-        fi
-    done
+    conda install -y ${missing_conda_dependencies[@]}
+    if [ $? -ne 0 ]
+    then
+        echo "[ $(date) ] Conda install ${p} failed!"
+        echo "[ $(date) ] Conda install ${p} failed!" >> ~/cpac.log
+        exit 1 
+    fi
+    #for p in ${missing_conda_dependencies[@]}
+    #do
+        #echo "[ $(date) ] Conda install ${p}!"
+        #conda install -y ${p}
+        #if [ $? -ne 0 ]
+        #then
+            #echo "[ $(date) ] Conda install ${p} failed!"
+            #echo "[ $(date) ] Conda install ${p} failed!" >> ~/cpac.log
+            #exit 1 
+        #fi
+    #done
 
-    for p in ${pip_packages[@]}
-    do
-        pip install ${p}
-        if [ $? -ne 0 ]
-        then
-            echo "[ $(date) ] Pip install ${p} failed!"
-            echo "[ $(date) ] Pip install ${p} failed!" >> ~/cpac.log
-            return 
-        fi
-    done
+    pip install ${missing_pip_dependencies[@]}
+    if [ $? -ne 0 ]
+    then
+        echo "[ $(date) ] Pip install ${missing_pip_dependencies[@]} failed!"
+        echo "[ $(date) ] Pip install ${p} failed!" >> ~/cpac.log
+        exit 1 
+    fi
+    #for p in ${missing_pip_dependencies[@]}
+    #do
+        #echo "[ $(date) ] Pip install ${p}!"
+        #pip install ${p}
+        #if [ $? -ne 0 ]
+        #then
+            #echo "[ $(date) ] Pip install ${p} failed!"
+            #echo "[ $(date) ] Pip install ${p} failed!" >> ~/cpac.log
+            #exit 1 
+        #fi
+    #done
 
     #echo 'source activate cpac' >> ~/cpac_env.sh
     cd /tmp
@@ -342,16 +394,23 @@ function install_python_dependencies {
 function get_missing_python_dependencies {
 
     python_dependencies_installed=0
-    missing_python_dependencies=()
+    missing_pip_dependencies=()
+    missing_conda_dependencies=()
 
     # first we check to make sure that we have python
-    python_installed=$(which python | grep -c python)
+    if [ ! -f /usr/local/bin/miniconda/bin/python ]
+    then
+        python_installed=0
+    else
+        python_installed=1
+    fi
 
     if [ ${python_installed} -eq 0 ]
     then
         echo "[ $(date) ] : Python is not installed, need to install all"\
              "Python dependencies." >> ~/cpac.log
-        missing_python_dependencies=${python_packages[@]}
+        missing_pip_dependencies=${pip_packages[@]}
+        missing_conda_dependencies=${conda_packages[@]}
     else
         # if we find an enviroment, then enable it
         if [ -d ~/miniconda/envs/cpac ] || [ -d /usr/local/bin/miniconda/envs/cpac ]
@@ -361,13 +420,45 @@ function get_missing_python_dependencies {
         fi
 
         python_dependencies_installed=1
-        for p in ${python_packages[@]}
+        for p in ${pip_packages[@]}
         do
-            python -c "import ${p}" 2> /dev/null
+            /usr/local/bin/miniconda/bin/python -c "import ${p}" 2> /dev/null
             if [ $? -ne 0 ]
             then
                 echo "[ $(date) ] : Python package $p not installed" >> ~/cpac.log
-                missing_python_dependencies+=($p)
+                missing_pip_dependencies+=($p)
+                python_dependencies_installed=0
+            else
+                echo "[ $(date) ] : Python package $p installed" >> ~/cpac.log
+            fi
+        done
+
+        for p in ${conda_packages[@]}
+        do
+            if [ ${p} == "wxpython" ]
+            then
+                /usr/local/bin/miniconda/bin/python -c "import wx" 2> /dev/null
+                retval=$?
+            elif [ ${p} == "pyyaml" ]
+            then
+                /usr/local/bin/miniconda/bin/python -c "import yaml" 2> /dev/null
+                retval=$?
+            elif [ ${p} == "ipython" ]
+            then
+                if [ -f /usr/local/bin/miniconda/bin/ipython ]
+                then
+                    retval=0
+                else
+                    retval=1
+                fi
+            else
+                /usr/local/bin/miniconda/bin/python -c "import ${p}" 2> /dev/null
+                retval=$?
+            fi
+            if [ $retval -ne 0 ]
+            then
+                echo "[ $(date) ] : Python package $p not installed" >> ~/cpac.log
+                missing_conda_dependencies+=($p)
                 python_dependencies_installed=0
             else
                 echo "[ $(date) ] : Python package $p installed" >> ~/cpac.log
@@ -381,8 +472,6 @@ function get_missing_python_dependencies {
             source deactivate &> /dev/null
         fi
     fi
-
-    echo "missing ${missing_python_dependencies[@]}"
 }
 
 function install_fsl {
@@ -409,6 +498,12 @@ function install_fsl {
     if [ $LOCAL -eq 0 ]; then
         if [ $DISTRO == 'CENTOS' ]; then
             python fslinstaller.py -d /usr/share
+            if [ $? -ne 0 ]
+            then
+                echo "FSL Install failed!"
+                exit 1
+            fi
+
             FSLDIR=/usr/share/fsl/
             mkdir $FSLDIR/5.0
             mv $FSLDIR/bin $FSLDIR/5.0/bin
@@ -418,10 +513,16 @@ function install_fsl {
             mv $FSLDIR/tcl $FSLDIR/5.0/tcl
         # Debian-based distros must use NeuroDebian instead of the installer.
         elif [ $DISTRO == 'UBUNTU' ]; then
-            wget -O- http://neuro.debian.net/lists/$(lsb_release -cs).us-nh.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
-            apt-key adv --recv-keys --keyserver pgp.mit.edu 2649A5A9
+            wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list
+            apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9
             apt-get update
             apt-get install -y fsl-5.0-complete
+            if [ $? -ne 0 ]
+            then
+                echo "FSL Install failed!"
+                exit 1
+            fi
+
         fi
         FSLDIR=/usr/share/fsl/5.0
         . ${FSLDIR}/etc/fslconf/fsl.sh
@@ -432,36 +533,47 @@ function install_fsl {
         echo '. ${FSLDIR}/etc/fslconf/fsl.sh' >> ~/cpac_env.sh
         echo 'PATH=${FSLDIR}/bin:${PATH}' >> ~/cpac_env.sh
         echo 'export FSLDIR PATH' >> ~/cpac_env.sh
-    elif [ $LOCAL -eq 1 ]; then
-        if [ $DISTRO == 'CENTOS' ]; then
-                        python fslinstaller.py -d ~
-                        FSLDIR=~/fsl/
-                        mkdir $FSLDIR/5.0
-                        mv $FSLDIR/bin $FSLDIR/5.0/bin
-                        ln -s $FSLDIR/data $FSLDIR/5.0/data
-                        mv $FSLDIR/doc $FSLDIR/5.0/doc
-                        mv $FSLDIR/etc $FSLDIR/5.0/etc
-                        mv $FSLDIR/tcl $FSLDIR/5.0/tcl
+    elif [ $LOCAL -eq 1 ]
+    then
+        if [ $DISTRO == 'CENTOS' ]
+        then
+            python fslinstaller.py -d ~
+            if [ $? -ne 0 ]
+            then
+                echo "FSL Install failed!"
+                exit 1
+            fi
+
+            FSLDIR=~/fsl/
+            mkdir $FSLDIR/5.0
+            mv $FSLDIR/bin $FSLDIR/5.0/bin
+            ln -s $FSLDIR/data $FSLDIR/5.0/data
+            mv $FSLDIR/doc $FSLDIR/5.0/doc
+            mv $FSLDIR/etc $FSLDIR/5.0/etc
+            mv $FSLDIR/tcl $FSLDIR/5.0/tcl
             FSLDIR=~/fsl/5.0
             . ${FSLDIR}/etc/fslconf/fsl.sh
             PATH=${FSLDIR}/bin:${PATH}
             export FSLDIR PATH
             echo '# Path to FSL' >> ~/cpac_env.sh
-                    echo 'FSLDIR=~/fsl/5.0' >> ~/cpac_env.sh
-                    echo '. ${FSLDIR}/etc/fslconf/fsl.sh' >> ~/cpac_env.sh
-                    echo 'PATH=${FSLDIR}/bin:${PATH}' >> ~/cpac_env.sh
-                    echo 'export FSLDIR PATH' >> ~/cpac_env.sh
-        elif [ $DISTRO == 'UBUNTU' ]; then
+            echo 'FSLDIR=~/fsl/5.0' >> ~/cpac_env.sh
+            echo '. ${FSLDIR}/etc/fslconf/fsl.sh' >> ~/cpac_env.sh
+            echo 'PATH=${FSLDIR}/bin:${PATH}' >> ~/cpac_env.sh
+            echo 'export FSLDIR PATH' >> ~/cpac_env.sh
+        elif [ $DISTRO == 'UBUNTU' ]
+        then
             echo FSL cannot be installed without root privileges on Ubuntu Linux.
-            echo '[ '$(date)' ] : FSL installation failed - need root privileges on Ubuntu.' >> ~/cpac.log
+            echo "[ $(date) ] : FSL installation failed - need root privileges" \
+                "on Ubuntu." >> ~/cpac.log 
             cd $INIT_DIR
             install_cpac_env
             exit 1
         fi
     else
-        echo Invalid value for variable 'LOCAL'.
-        echo This script is unable to determine whether or not you are running it as root.
-        echo '[ '$(date)' ] : FSL could not be installed (unable to determine if root).' >> ~/cpac.log
+        echo "Invalid value for variable 'LOCAL'."
+        echo "This script is unable to determine whether or not you are running it as root."
+        echo "[ $(date) ] : FSL could not be installed (unable to determine " \
+            "if root)." >> ~/cpac.log
         cd $INIT_DIR
         exit 1
     fi
@@ -472,7 +584,8 @@ function install_afni {
     which afni &> /dev/null ; if [ $? -eq 0 ]; then
         echo AFNI is already installed!
         echo Moving on...
-        echo '[ '$(date)' ] : AFNI is already installed - does not need to be re-installed.' >> ~/cpac.log
+        echo "[ $(date) ] : AFNI is already installed - does not need to be" \
+            " re-installed." >> ~/cpac.log
         return
     fi
     if [ $system_dependencies_installed -ne 1 ]
@@ -480,7 +593,8 @@ function install_afni {
         echo "AFNI cannot be installed unless system-level dependencies are installed first."
         echo "Have your system administrator install system-level dependencies as root."
         echo "Exiting now..."
-        echo "[ $(date) ] : AFNI installation failed - system-level dependencies are not installed." >> ~/cpac.log
+        echo "[ $(date) ] : AFNI installation failed - system-level dependencies are" \
+            "not installed." >> ~/cpac.log
         cd $INIT_DIR
         exit 1
     fi
@@ -491,8 +605,18 @@ function install_afni {
         AFNI_DOWNLOAD=linux_openmp
     fi
 
-    wget http://afni.nimh.nih.gov/pub/dist/tgz/${AFNI_DOWNLOAD}.tgz
-    tar xfz ${AFNI_DOWNLOAD}.tgz
+    #wget http://afni.nimh.nih.gov/pub/dist/tgz/${AFNI_DOWNLOAD}.tgz
+    #tar xfz ${AFNI_DOWNLOAD}.tgz
+    git clone https://github.com/ccraddock/afni.git
+    cd /tmp/afni/src
+    cp Makefile.linux_openmp_64_trusty Makefile
+    make vastness
+
+    if [ $? -ne 0 ]
+    then
+        echo "AFNI Install failed!"
+        exit 1
+    fi
 
     if [ $LOCAL -eq 0 ]
     then
@@ -701,7 +825,7 @@ function install_cpac {
     fi
     #source activate cpac
     cd /tmp
-    git clone https://github.com/FCP-INDI/C-PAC.git
+    git clone -b 0.4.0_development https://github.com/FCP-INDI/C-PAC.git
     cd C-PAC
     python setup.py install
     #source deactivate
@@ -736,10 +860,7 @@ function install_cpac_env {
 
 ##### MAIN ENTRY POINT
 
-if [ -f ~/cpac_env.sh ]
-then
-    source ~/cpac_env.sh
-fi
+
 
 # Check to see if user has root privileges.  If not, perform local install.
 # CC undid the obfuscation
@@ -795,7 +916,8 @@ get_missing_system_dependencies
 get_missing_python_dependencies
 
 echo "missing python dependencies"
-echo ${missing_python_dependencies[@]}
+echo ${missing_conda_dependencies[@]}
+echo ${missing_pip_dependencies[@]}
 
 
 if [ ${system_dependencies_installed} -eq 1 ]
@@ -895,6 +1017,8 @@ do
             fi
             install_c3d
             install_ants
+            install_cpac_resources
+            install_cpac
             install_cpac_env
             ;;
         l)
