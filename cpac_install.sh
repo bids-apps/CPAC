@@ -33,11 +33,9 @@ ubuntu_packages=("cmake" "git" "graphviz" "graphviz-dev" "gsl-bin" "libcanberra-
     "libxp6" "libxp-dev" "make" "mesa-common-dev" "mesa-utils" "netpbm" "pkg-config" \
     "build-essential" "xvfb" "xauth" "libgl1-mesa-dri" "tcsh" "unzip" "zlib1g-dev" "m4")
 
-conda_packages=("cython" "numpy" "scipy" "matplotlib" "networkx" "traits" "pyyaml"\
-    "jinja2" "nose" "ipython" "pip" "wxpython")
+conda_packages=("cython" "numpy" "scipy" "matplotlib" "networkx" "traits" "pyyaml" "jinja2" "nose" "ipython" "pip" "wxpython")
 
-pip_packages=("future" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel"\
-    "nipype" "patsy" "memory_profiler" "psutil")
+pip_packages=("future" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel" "nipype" "patsy" "memory_profiler" "psutil")
 
 function set_system_deps {
     system_pkgs=''
@@ -660,9 +658,9 @@ function install_ants {
         exit 1
     fi
     which c3d &> /dev/null ; if [ $? -ne 0 ]; then
-        echo ANTS cannot be installed unless c3d is installed first.
-        echo Install c3d and then try again.
-        echo Exiting now...
+        echo "ANTS cannot be installed unless c3d is installed first."
+        echo "Install c3d and then try again."
+        echo "Exiting now..."
         echo '[ '$(date)' ] : ANTS installation failed - C3D is not installed.' >> ~/cpac.log
         cd $INIT_DIR
         install_cpac_env
@@ -675,7 +673,15 @@ function install_ants {
         cd /opt/ants
         cmake -c -g /tmp/ANTs
 	# go slow, -j 4 causes seg fault w/ building containers
-        make 
+        make
+        if [ $? -ne 0 ]
+        then
+            echo "ANTS compile failed."
+            echo "Exiting now..."
+            echo "[ $(date) ] : ANTS installation failed - compile failed." >> ~/cpac.log
+            cd $INIT_DIR
+            exit 1
+        fi
         ANTSPATH=/opt/ants/bin
         cp /tmp/ANTs/Scripts/antsIntroduction.sh ${ANTSPATH}
         cp /tmp/ANTs/Scripts/antsAtroposN4.sh ${ANTSPATH}
@@ -692,6 +698,14 @@ function install_ants {
         cmake -c -g /tmp/ANTs
 	# go slow, -j 4 causes seg fault w/ building containers
         make
+        if [ $? -ne 0 ]
+        then
+            echo "ANTS compile failed."
+            echo "Exiting now..."
+            echo "[ $(date) ] : ANTS installation failed - compile failed." >> ~/cpac.log
+            cd $INIT_DIR
+            exit 1
+        fi
         ANTSPATH=~/ants/bin
         cp /tmp/ANTs/Scripts/antsIntroduction.sh ${ANTSPATH}
         cp /tmp/ANTs/Scripts/antsAtroposN4.sh ${ANTSPATH}
@@ -753,25 +767,55 @@ function install_c3d {
     fi
 }
 
+cpac_resources=("$FSLDIR/data/standard/MNI152_T1_2mm_brain_mask_symmetric_dil.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_2mm_brain_symmetric.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_2mm_symmetric.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_3mm_brain_mask_dil.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_3mm_brain_mask.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_3mm_brain_mask_symmetric_dil.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_3mm_brain.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_3mm_brain_symmetric.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_3mm.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_3mm_symmetric.nii.gz" \
+    "$FSLDIR/data/atlases/HarvardOxford/HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz")
+
+cpac_resdirs=("$FSLDIR/data/standard/tissuepriors/2mm" \
+              "$FSLDIR/data/standard/tissuepriors/3mm")
+
 function install_cpac_resources {
     echo "Installing C-PAC Image Resources."
     # Determines if C-PAC image resources are all already installed.
     RES_PRES=1
-    for res in MNI152_T1_2mm_brain_mask_symmetric_dil.nii.gz MNI152_T1_2mm_brain_symmetric.nii.gz MNI152_T1_2mm_symmetric.nii.gz MNI152_T1_3mm_brain_mask_dil.nii.gz MNI152_T1_3mm_brain_mask.nii.gz MNI152_T1_3mm_brain_mask_symmetric_dil.nii.gz MNI152_T1_3mm_brain.nii.gz MNI152_T1_3mm_brain_symmetric.nii.gz MNI152_T1_3mm.nii.gz MNI152_T1_3mm_symmetric.nii.gz; do
-        [ ! -f $FSLDIR/data/standard/$res ] && RES_PRES=0
+    for res in ${cpac_resources[@]}
+    do
+        if [ ! -f $FSLDIR/data/standard/$res ]
+        then
+            RES_PRES=0
+        fi
     done
-    [ ! -d $FSLDIR/data/standard/tissuepriors/2mm ] || [ ! -d $FSLDIR/data/standard/tissuepriors/3mm ] || [ ! -f $FSLDIR/data/atlases/HarvardOxford/HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz ] && RES_PRES=0
-    if [ $RES_PRES -eq 1 ]; then
-        echo CPAC Resources are already present!
-        echo Moving on...
-        echo '[ '$(date)' ] : C-PAC resources are already installed - do not need to be re-installed.' >> ~/cpac.log
+    for resdir in ${cpac_resdirs[@]}
+    do
+        if [ ! -d ${resdir} ]
+        then
+            RES_PRES=0
+        fi
+    done
+
+    if [ ${RES_PRES} -eq 1 ]
+    then
+        echo "CPAC Resources are already present!"
+        echo "Moving on..."
+        echo "[ $(date) ] : C-PAC resources are already installed - do not need to be re-installed." >> ~/cpac.log
         return
     fi
-    which fsl &> /dev/null ; if [ $? -ne 0 ]; then
-        echo CPAC templates cannot be copied unless FSL is installed first.
-        echo Install FSL and then try again.
-        echo Exiting now...
-        echo '[ '$(date)' ] : C-PAC resources installation failed - FSL is not installed.' >> ~/cpac.log
+
+    #which fsl &> /dev/null ; if [ $? -ne 0 ]; then
+    if [ ! -d "$FSLDIR/data" ]
+    then
+        echo "CPAC templates cannot be copied unless FSL is installed first."
+        echo "Install FSL and then try again."
+        echo "Exiting now..."
+        echo "[ $(date) ] : C-PAC resources installation failed - FSL is not installed." >> ~/cpac.log
         cd $INIT_DIR
         install_cpac_env
         exit 1
