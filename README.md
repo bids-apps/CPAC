@@ -11,19 +11,21 @@ Please report errors on the [C-PAC github page issue tracker](https://github.com
 ### Acknowledgements
 We currently have a publication in preparation, in the meantime please cite our poster from INCF:
 
-    Craddock C, Sikka S, Cheung B, Khanuja R, Ghosh SS, Yan C, Li Q, Lurie D, Vogelstein J, Burns R, Colcombe S, Mennes M, Kelly C, Di Martino A, Castellanos FX and Milham M (2013). Towards Automated Analysis of Connectomes: The Configurable Pipeline for the Analysis of Connectomes (C-PAC). Front. Neuroinform. Conference Abstract: Neuroinformatics 2013. doi: 10.3389/conf.fninf.2013.09.00042
+    Craddock C, Sikka S, Cheung B, Khanuja R, Ghosh SS, Yan C, Li Q, Lurie D, Vogelstein J, Burns R, Colcombe S, Mennes M,
+    Kelly C, Di Martino A, Castellanos FX and Milham M (2013). Towards Automated Analysis of Connectomes: The Configurable
+    Pipeline for the Analysis of Connectomes (C-PAC). Front. Neuroinform. Conference Abstract: Neuroinformatics 2013.
+    doi:10.3389/conf.fninf.2013.09.00042
 
-  @ARTICLE{cpac2013,
-      AUTHOR={Craddock, Cameron  and  Sikka, Sharad  and  Cheung, Brian  and  Khanuja, Ranjeet  and  Ghosh, Satrajit S  and  Yan, Chaogan  and  Li, Qingyang  and  Lurie, Daniel  and  Vogelstein, Joshua  and  Burns, Randal  and  Colcombe, Stanley  and  Mennes, Maarten  and  Kelly, Clare  and  Di Martino, Adriana  and  Castellanos, Francisco Xavier  and  Milham, Michael},   
-      TITLE={Towards Automated Analysis of Connectomes: The Configurable Pipeline for the Analysis of Connectomes (C-PAC)},      
-      JOURNAL={Frontiers in Neuroinformatics},      
-      VOLUME={},      
-      YEAR={2013},      
-      NUMBER={42},     
-      URL={http://www.frontiersin.org/neuroinformatics/10.3389/conf.fninf.2013.09.00042/full},       
-      DOI={10.3389/conf.fninf.2013.09.00042},      
-      ISSN={1662-5196}
-  }
+    @ARTICLE{cpac2013,
+        AUTHOR={Craddock, Cameron  and  Sikka, Sharad  and  Cheung, Brian  and  Khanuja, Ranjeet  and  Ghosh, Satrajit S  andYan, Chaogan  and  Li, Qingyang  and  Lurie, Daniel  and  Vogelstein, Joshua  and  Burns, Randal  and  Colcombe, Stanley  and  Mennes, Maarten  and  Kelly, Clare  and  Di Martino, Adriana  and  Castellanos, Francisco Xavier  and  Milham, Michael},  
+        TITLE={Towards Automated Analysis of Connectomes: The Configurable Pipeline for the Analysis of Connectomes (C-PAC)},     
+        JOURNAL={Frontiers in Neuroinformatics},
+        YEAR={2013},
+        NUMBER={42},
+        URL={http://www.frontiersin.org/neuroinformatics/10.3389/conf.fninf.2013.09.00042/full},
+        DOI={10.3389/conf.fninf.2013.09.00042},
+        ISSN={1662-5196}
+    }
 
 ### Usage
 This App has the following command line arguments:
