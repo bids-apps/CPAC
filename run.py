@@ -53,6 +53,9 @@ parser.add_argument('--save_working_dir', action='store_true',
 # get the command line arguments
 args = parser.parse_args()
 
+# validate input dir
+run("bids-validator %s"%args.bids_dir)
+
 print(args)
 # get and set configuration
 c = cpac_utils.Configuration(yaml.load(open(\
