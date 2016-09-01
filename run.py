@@ -18,7 +18,7 @@ def run(command, env={}):
         shell=True, env=env)
     while True:
         line = process.stdout.readline()
-        line = str(line, 'utf-8')[:-1]
+        line = str(line)[:-1]
         print(line)
         if line == '' and process.poll() != None:
             break
