@@ -18,7 +18,7 @@ def run(command, env={}):
         shell=True, env=env)
     while True:
         line = process.stdout.readline()
-        line = str(line, 'utf-8')[:-1]
+        line = str(line)[:-1]
         print(line)
         if line == '' and process.poll() != None:
             break
@@ -52,6 +52,9 @@ parser.add_argument('--save_working_dir', action='store_true',
 
 # get the command line arguments
 args = parser.parse_args()
+
+# validate input dir
+run("bids-validator %s"%args.bids_dir)
 
 print(args)
 # get and set configuration
