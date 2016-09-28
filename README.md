@@ -87,5 +87,5 @@ can be run:
     docker run -i --rm \
 		-v /Users/filo/data/ds005:/bids_dataset \
 		-v /Users/filo/outputs:/outputs \
-		bids/example \
+		bids-apps/cpac:v1.0.0 \
 		/bids_dataset /outputs group
