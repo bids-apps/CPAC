@@ -61,18 +61,20 @@ c = yaml.load(open(os.path.realpath(args.pipeline_file), 'r'))
 # TODO: we will need to check that the directories exist, and
 # make them if they do not
 c['outputDirectory'] = os.path.join(args.output_dir, "output")
-c['workingDirectory'] = os.path.join(args.output_dir, "working")
+
 c['crashLogDirectory'] = os.path.join(args.output_dir, "crash")
 c['logDirectory'] = os.path.join(args.output_dir, "log")
 
 c['memoryAllocatedPerSubject'] = int(args.mem)
 c['numCoresPerSubject'] = int(args.n_cpus)
 c['numSubjectsAtOnce'] = 1
-c['num_ants_threads'] = min(args.n_cpus,4, int(c['num_ants_threads']))
+c['num_ants_threads'] = min(args.n_cpus, int(c['num_ants_threads']))
 if( args.save_working_dir == True ):
     c['removeWorkingDir'] = False
+    c['workingDirectory'] = os.path.join(args.output_dir, "working")
 else:
     c['removeWorkingDir'] = True
+    c['workingDirectory'] = os.path.join('/tmp', "working")
 
 print ("#### Running C-PAC on %s"%(args.participant_label))
 print ("Number of subjects to run in parallel: %d"%(c['numSubjectsAtOnce']))
@@ -90,7 +92,7 @@ subjects_to_analyze = []
 
 # only for a subset of subjects
 if args.participant_label:
-    subjects_to_analyze = args.participant_label
+    subjects_to_analyze = args.participant_label.split(' ')
 
 # for all subjects
 else:
@@ -102,11 +104,72 @@ else:
 if args.analysis_level == "participant":
     sublist = []
     for subject_label in subjects_to_analyze:
-        anat = " ".join(["%s"%f for f in \
-            glob(os.path.join(args.bids_dir,"sub-%s"%subject_label,"anat",
-                "*_T1w.nii*")) + \
-            glob(os.path.join(args.bids_dir,"sub-%s"%subject_label,"ses-*",
-                "anat", "*_T1w.nii*"))])
+
+        new_sub = {}
+        new_sub['subject_id'] = 'sub-%s'%(subject_label)
+
+        #check if file does not have session
+        anat = glob(os.path.join(args.bids_dir,"sub-%s"%subject_label,"anat",
+                 "*_T1w.nii*"))
+
+        if len(anat) > 0:
+            new_sub['anat'] = anat
+            func_files = glob(os.path.join(args.bids_dir,"sub-%s"%subject_label,"func",
+                "*_bold.nii*"))
+            if len(func_files) == 0:
+                print 'functional files for subject %s not found, skipping subject.'%(subject_label)
+                continue
+
+            func_ids = {}
+            for f in func_files:
+                x = f.split('_')
+                func_id = x[2] + x[3]
+                func_ids[func_id] = f
+
+            new_sub['rest'] = func_ids
+            new_sub['unique_id'] = ''
+
+        #else get file for each session
+        else:
+            anat = glob(os.path.join(args.bids_dir,"sub-%s"%subject_label,"ses-*",
+                 "anat", "*_T1w.nii*"))
+
+            if len(anat) == 0:
+                print 'anatomical file for subject %s not found, skipping subject.'%(subject_label)
+                continue
+
+            sessions = {}
+            for a in anat:
+                a
+
+            new_sub['anat'] = anat
+
+            func_files = glob(os.path.join(args.bids_dir,"sub-%s"%subject_label,"ses-*",
+                "func", "*_bold.nii*"))
+
+            
+            for f in func_files:
+                x = f.split('_')
+                sess = x[1]
+                func_id = x[2] + x[3]
+                if not sess in sessions:
+                    sessions[sess] = {}
+                sessions[sess][func_id] = f
+
+
+            for s in session:
+                new_sub['rest'] = sessions[s]
+
+
+
+
+
+
+        # anat = " ".join(["%s"%f for f in \
+        #     glob(os.path.join(args.bids_dir,"sub-%s"%subject_label,"anat",
+        #         "*_T1w.nii*")) + \
+        #     glob(os.path.join(args.bids_dir,"sub-%s"%subject_label,"ses-*",
+        #         "anat", "*_T1w.nii*"))])
 
         if len(anat) == 0:
             print 'anatomical file for subject %s not found, skipping subject.'%(subject_label)
@@ -121,18 +184,17 @@ if args.analysis_level == "participant":
 
         if len(func_files) == 0:
             print 'functional files for subject %s not found ,skipping subject.'%(subject_label)
+            continue
 
         func = {}
         for f in func_files:
             func_id = f.split('-')[-1].split('_')[0]
             func[func_id] = f
 
-        new_sub = {}
-        new_sub['subject_id'] = 'sub-%s'%(subject_label)
-        ##??new_sub['unique_id'] = 'sub-'%(subject_label)
-        new_sub['anat'] = anat
-        new_sub['rest'] = func
-        new_sub['unique_id'] = ''
+        
+        
+        
+        
         sublist.append(new_sub)
 
     if len(sublist) == 0:
