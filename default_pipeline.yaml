@@ -44,7 +44,7 @@ num_ants_threads :  1
 
 
 # Name for this pipeline configuration - useful for identification.
-pipelineName :  NFB
+pipelineName :  analysis
 
 
 # Directory where CPAC should store temporary and intermediate files.
@@ -133,21 +133,6 @@ already_skullstripped :  [0]
 runSegmentationPreprocessing :  [1]
 
 
-# Only voxels with a White Matter probability greater than this value will be classified as White Matter.
-# Can be a single value or a list of values separated by commas.
-whiteMatterThreshold : [0.96]
-
-
-# Only voxels with a Gray Matter probability greater than this value will be classified as Gray Matter.
-# Can be a single value or a list of values separated by commas.
-grayMatterThreshold : [0.7]
-
-
-# Only voxels with a CSF probability greater than this value will be classified as CSF.
-# Can be a single value or a list of values separated by commas.
-cerebralSpinalFluidThreshold : [0.96]
-
-
 # Full path to a directory containing binarized prior probability maps.
 # These maps are included as part of the 'Image Resource Files' package
 # available on the Install page of the User Guide. It is not necessary 
@@ -227,15 +212,18 @@ runRegisterFuncToMNI :  [1]
 
 
 # The resolution (in mm) to which functional images are transformed during registration
-resolution_for_func :  2mm
+resolution_for_func_preproc :  3mm
+
+# The resolutions to resample the normalized functional timeseries to
+resolution_for_func_derivative :  3mm
 
 
 # Standard FSL Skull Stripped Template. Used as a reference image for functional registration
-template_brain_only_for_func :  /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_func}_brain.nii.gz
+template_brain_only_for_func :  /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_func_preproc}_brain.nii.gz
 
 
 # Standard FSL Anatomical Brain Image with Skull
-template_skull_for_func :  /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_func}.nii.gz
+template_skull_for_func :  /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_func_preproc}.nii.gz
 
 
 # Matrix containing all 1's. Used as an identity matrix during registration.
@@ -256,7 +244,7 @@ runNuisance :  [1]
 
 
 # Standard Lateral Ventricles Binary Mask
-lateral_ventricles_mask :  /usr/share/fsl/5.0/data/standard/HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz
+lateral_ventricles_mask :  /usr/share/fsl/5.0/data/atlases/HarvardOxford/HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz
 
 
 # Select which nuisance signal corrections to apply:
@@ -365,8 +353,8 @@ runSCA :  [1]
 # Available analyses: ['Avg', 'DualReg', 'MultReg'].
 # Denote which analyses to run for each ROI path by listing the names above. For example, if you wish to run Avg and MultReg, you would enter: '/path/to/ROI.nii.gz': Avg, MultReg
 sca_roi_paths:
-  - /cpac_resources/cpac_templates/PNAS_Smith09_rsn10.nii.gz: DualReg, MultReg
-  - /cpac_resources/cpac_templates/rois_3mm.nii.gz: Avg, MultReg
+  - /cpac_resources/cpac_templates/PNAS_Smith09_rsn10.nii.gz: DualReg
+    /cpac_resources/cpac_templates/rois_3mm.nii.gz: Avg, MultReg
 
 
 
