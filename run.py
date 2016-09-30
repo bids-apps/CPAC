@@ -92,18 +92,19 @@ print ("Number of threads for ANTs: %d"%(c['num_ants_threads']))
 #create subject list
 if args.analysis_level == "group":
     print "Group level analysis is not currently supported yet"
-    sys.exit(1)
+    sys.exit(0)
 
 
 file_paths=[]
 
 if args.participant_label:
-    for pt in args.participant_label.split(' '):
-        file_paths.append(glob(os.path.join(args.bids_dir,"sub-%s"%(pt),
-            "*","*","*.nii*")))
+    for pt in args.participant_label:
+        file_paths+=glob(os.path.join(args.bids_dir,"sub-%s"%(pt),
+            "*","*.nii*"))+glob(os.path.join(args.bids_dir,"sub-%s"%(pt),
+            "*","*","*.nii*"))
 else:
-    file_paths=glob(os.path.join(args.bids_dir,"*","*","*","*.nii*"))
-
+    file_paths=glob(os.path.join(args.bids_dir,"*","*.nii*"))+\
+               glob(os.path.join(args.bids_dir,"*","*","*.nii*"))
 
 sub_list = gen_bids_sublist(file_paths)
 
