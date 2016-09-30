@@ -38,6 +38,7 @@ RUN apt-get update && \
 
 RUN npm install -g bids-validator
 
+COPY bids_utils.py /code/bids_utils.py
 COPY run.py /code/run.py
 COPY cpac_templates.tar.gz /cpac_resources/cpac_templates.tar.gz
 RUN chmod +x /code/run.py && cd /cpac_resources \
