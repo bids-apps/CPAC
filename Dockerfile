@@ -44,7 +44,9 @@ COPY cpac_templates.tar.gz /cpac_resources/cpac_templates.tar.gz
 RUN chmod +x /code/run.py && cd /cpac_resources \
    && tar xzvf /cpac_resources/cpac_templates.tar.gz \
    && rm -f /cpac_resources/cpac_templates.tar.gz
+
 COPY default_pipeline.yaml /cpac_resources/default_pipeline.yaml
+COPY test_pipeline.yaml /cpac_resources/test_pipeline.yam
 
 COPY version /version
 
