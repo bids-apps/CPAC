@@ -38,7 +38,7 @@ parser.add_argument('--participant_label', help='The label of the participant'
     '(so it does not include "sub-"). If this parameter is not '
     'provided all subjects should be analyzed. Multiple '
     'participants can be specified with a space separated list.', nargs="+")
-parser.add_argument(' ', help='Name for the pipeline '
+parser.add_argument('--pipeline_file', help='Name for the pipeline '
     ' configuration file to use',
     default="/cpac_resources/default_pipeline.yaml")
 parser.add_argument('--n_cpus', help='Number of execution '
