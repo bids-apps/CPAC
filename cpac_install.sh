@@ -605,10 +605,15 @@ function install_afni {
 
     #wget http://afni.nimh.nih.gov/pub/dist/tgz/${AFNI_DOWNLOAD}.tgz
     #tar xfz ${AFNI_DOWNLOAD}.tgz
-    git clone https://github.com/ccraddock/afni.git
-    cd /tmp/afni/src
-    cp Makefile.linux_openmp_64_trusty Makefile
-    make vastness
+
+    wget http://fcp-indi.s3.amazonaws.com/resources/cc_afni_trusty_openmp_64.tar.gz
+    tar xfz cc_afni_trusty_openmp_64.tar.gz
+    AFNI_DOWNLOAD=afni
+
+    #git clone https://github.com/ccraddock/afni.git
+    #cd /tmp/afni/src
+    #cp Makefile.linux_openmp_64_trusty Makefile
+    #make vastness
 
     if [ $? -ne 0 ]
     then
