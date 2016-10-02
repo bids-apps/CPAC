@@ -608,6 +608,7 @@ function install_afni {
 
     wget http://fcp-indi.s3.amazonaws.com/resources/cc_afni_trusty_openmp_64.tar.gz
     tar xfz cc_afni_trusty_openmp_64.tar.gz
+    rm cc_afni_trusty_openmp_64.tar.gz
     AFNI_DOWNLOAD=afni
 
     #git clone https://github.com/ccraddock/afni.git
