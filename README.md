@@ -1,11 +1,10 @@
 # C-PAC BIDS Application
 
-The Configurable Pipeline for the Analysis of Connectomes [C-PAC](http://fcp-indi.github.io) is a software for performing high-throughput preprocessing and analysis of functional connectomes data using high-performance computers. C-PAC is implemented in Python using the Nipype pipelining [[1](#nipype)] library to efficiently combine tools from AFNI [[2](#afni)], ANTS [[3](#ants)], and FSL [[4](#fsl)] to achieve high quality and robust automated processing. 
-
-This docker container, when built, is an application for performing participant level analyses. Future releases will include group-level analyses, when there is a BIDS standard for handling derivatives and group models.
-
 ## Documentation
-Extensive information can be found in the [C-PAC User Guide](http://fcp-indi.github.com/docs/user/index.html). You can either perform a custom processing using a YAML configuration file, or use the default processing pipeline.
+Extensive information can be found in the [C-PAC User Guide](http://fcp-indi.github.com/docs/user/index.html). 
+
+## Description
+The Configurable Pipeline for the Analysis of Connectomes [C-PAC](http://fcp-indi.github.io) is a software for performing high-throughput preprocessing and analysis of functional connectomes data using high-performance computers. C-PAC is implemented in Python using the Nipype pipelining [[1](#nipype)] library to efficiently combine tools from AFNI [[2](#afni)], ANTS [[3](#ants)], and FSL [[4](#fsl)] to achieve high quality and robust automated processing. This docker container, when built, is an application for performing participant level analyses. Future releases will include group-level analyses, when there is a BIDS standard for handling derivatives and group models. You can either perform a custom processing using a YAML configuration file, or use the default processing pipeline.
 
 ### Default configuration
 The default processing pipeline performs fMRI processing using four strategies, with and without global signal regression, with and without bandpass filtering.
