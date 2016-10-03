@@ -22,6 +22,7 @@ dependencies:
     - docker build -t bids/${CIRCLE_PROJECT_REPONAME,,} . :
         timeout: 21600
     - mkdir -p ~/docker; docker save "bids/${CIRCLE_PROJECT_REPONAME,,}" > ~/docker/image.tar
+        timeout: 21600
     - mkdir -p ${HOME}/outputs
 
 test:
