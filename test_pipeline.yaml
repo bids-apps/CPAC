@@ -92,7 +92,7 @@ reGenerateOutputs :  False
 
 # The resolution to which anatomical images should be transformed during registration.
 # This is the resolution at which processed anatomical files will be output.
-resolution_for_anat :  3mm
+resolution_for_anat :  2mm
 
 
 # Template to be used during registration.
@@ -111,7 +111,7 @@ regOption :  ['FSL']
 
 # Configuration file to be used by FSL to set FNIRT parameters.
 # It is not necessary to change this path unless you intend to use custom FNIRT parameters or a non-standard template.
-fnirtConfig :  T1_2_MNI152_3mm
+fnirtConfig :  T1_2_MNI152_2mm
 
 
 # Configuration file to be used by FSL to set FNIRT parameters.
