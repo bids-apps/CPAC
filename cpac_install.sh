@@ -603,13 +603,13 @@ function install_afni {
         AFNI_DOWNLOAD=linux_openmp
     fi
 
-    #wget http://afni.nimh.nih.gov/pub/dist/tgz/${AFNI_DOWNLOAD}.tgz
-    #tar xfz ${AFNI_DOWNLOAD}.tgz
+    wget http://afni.nimh.nih.gov/pub/dist/tgz/${AFNI_DOWNLOAD}.tgz
+    tar xfz ${AFNI_DOWNLOAD}.tgz
 
-    wget http://fcp-indi.s3.amazonaws.com/resources/cc_afni_trusty_openmp_64.tar.gz
-    tar xfz cc_afni_trusty_openmp_64.tar.gz
-    rm cc_afni_trusty_openmp_64.tar.gz
-    AFNI_DOWNLOAD=afni
+    #wget http://fcp-indi.s3.amazonaws.com/resources/cc_afni_trusty_openmp_64.tar.gz
+    #tar xfz cc_afni_trusty_openmp_64.tar.gz
+    #rm cc_afni_trusty_openmp_64.tar.gz
+    #AFNI_DOWNLOAD=afni
 
     #git clone https://github.com/ccraddock/afni.git
     #cd /tmp/afni/src
