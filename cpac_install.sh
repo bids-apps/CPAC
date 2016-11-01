@@ -35,7 +35,7 @@ ubuntu_packages=("cmake" "git" "graphviz" "graphviz-dev" "gsl-bin" "libcanberra-
 
 conda_packages=("cython" "numpy" "scipy" "matplotlib" "networkx" "traits" "pyyaml" "jinja2" "nose" "ipython" "pip" "wxpython")
 
-pip_packages=("future" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel" "nipype" "patsy" "memory_profiler" "psutil")
+pip_packages=("future" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel" "nipype" "patsy" "memory_profiler" "psutil" "configparser")
 
 function set_system_deps {
     system_pkgs=''
@@ -868,6 +868,9 @@ function install_cpac {
         echo CPAC cannot be installed unless Python dependencies are installed first.
         echo Install Python dependencies and then try again.
         echo Exiting now...
+        echo "missing python dependencies"
+        echo ${missing_conda_dependencies[@]}
+        echo ${missing_pip_dependencies[@]}
         echo '[ '$(date)' ] : C-PAC installation failed - Python dependencies are not installed.' >> ~/cpac.log
         cd $INIT_DIR
         install_cpac_env
