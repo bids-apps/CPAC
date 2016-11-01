@@ -103,8 +103,12 @@ if args.participant_label:
             "*","*.nii*"))+glob(os.path.join(args.bids_dir,"sub-%s"%(pt),
             "*","*","*.nii*"))
 else:
-    file_paths=glob(os.path.join(args.bids_dir,"*","*.nii*"))+\
-               glob(os.path.join(args.bids_dir,"*","*","*.nii*"))
+    file_paths=glob(os.path.join(args.bids_dir,"*","*","*.nii*"))+\
+               glob(os.path.join(args.bids_dir,"*","*","*","*.nii*"))
+
+if not file_paths:
+    print "Did not find any files to process"
+    sys.exit(1)
 
 sub_list = gen_bids_sublist(file_paths)
 
