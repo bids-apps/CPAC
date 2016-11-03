@@ -41,6 +41,13 @@ parser.add_argument('--participant_label', help='The label of the participant'
 parser.add_argument('--pipeline_file', help='Name for the pipeline '
     ' configuration file to use',
     default="/cpac_resources/default_pipeline.yaml")
+parser.add_argument('--data_cfg_file', help='Yaml file containing the location'
+    ' of the data that is to be processed. Can be generated from the CPAC gui.'
+    ' this is not necessary if the data in bids_dir is organized according to'
+    ' the BIDS format. This enables support for legacy data organization and'
+    ' cloud based storage. A bids_dir must still be specified when using this'
+    ' option, but its value will be ignored.',
+    default=None)
 parser.add_argument('--n_cpus', help='Number of execution '
     ' resources available for the pipeline', default="1")
 parser.add_argument('--mem', help='Amount of RAM available to the pipeline'
@@ -76,7 +83,7 @@ if( args.save_working_dir == True ):
     c['workingDirectory'] = os.path.join(args.output_dir, "working")
 else:
     c['removeWorkingDir'] = True
-    c['workingDirectory'] = os.path.join('/tmp', "working")
+    c['workingDirectory'] = os.path.join('/scratch', "working")
 
 print ("#### Running C-PAC on %s"%(args.participant_label))
 print ("Number of subjects to run in parallel: %d"%(c['numSubjectsAtOnce']))
