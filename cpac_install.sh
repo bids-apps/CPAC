@@ -878,8 +878,9 @@ function install_cpac {
     fi
     #source activate cpac
     cd /tmp
-    git clone -b 0.4.0_development https://github.com/FCP-INDI/C-PAC.git
-    cd C-PAC
+    wget https://github.com/FCP-INDI/C-PAC/archive/v1.0.0.tar.gz
+    tar xzvf v1.0.0.tar.gz
+    cd C-PAC-1.0.0
     python setup.py install
     #source deactivate
 }

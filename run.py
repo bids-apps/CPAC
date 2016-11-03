@@ -69,7 +69,7 @@ c['logDirectory'] = os.path.join(args.output_dir, "log")
 c['memoryAllocatedPerSubject'] = int(args.mem)
 c['numCoresPerSubject'] = int(args.n_cpus)
 c['numSubjectsAtOnce'] = 1
-c['num_ants_threads'] = min(args.n_cpus, int(c['num_ants_threads']))
+c['num_ants_threads'] = min(int(args.n_cpus), int(c['num_ants_threads']))
 
 if( args.save_working_dir == True ):
     c['removeWorkingDir'] = False
