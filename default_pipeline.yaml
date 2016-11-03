@@ -40,8 +40,7 @@ numSubjectsAtOnce :  1
 
 # This number depends on computing resources.
 # IMPORTANT: 'Number of Cores Per Subject' multiplied by 'Number of Subjects to Run Simultaneously' multiplied by 'Number of Cores for Anatomical Registration (ANTS only)' must not be greater than the total number of cores.
-num_ants_threads :  1
-
+num_ants_threads :  4
 
 # Name for this pipeline configuration - useful for identification.
 pipelineName :  analysis
@@ -354,9 +353,6 @@ runSCA :  [1]
 # Denote which analyses to run for each ROI path by listing the names above. For example, if you wish to run Avg and MultReg, you would enter: '/path/to/ROI.nii.gz': Avg, MultReg
 sca_roi_paths:
   - /cpac_resources/cpac_templates/PNAS_Smith09_rsn10.nii.gz: DualReg
-    /cpac_resources/cpac_templates/rois_3mm.nii.gz: Avg
-
-
 
 # Normalize each time series before running Dual Regression SCA.
 mrsNorm :  True

@@ -125,4 +125,11 @@ with open(config_file, 'w') as f:
 
 #build pipeline easy way
 import CPAC
-CPAC.pipeline.cpac_runner.run(config_file, subject_list_file)
+from nipype.pipeline.plugins.callback_log import log_nodes_cb
+
+plugin_args = {'n_procs': int(args.n_cpus),
+               'memory_gb': int(args.mem),
+               'callback_log' : log_nodes_cb}
+
+CPAC.pipeline.cpac_runner.run(config_file, subject_list_file,
+    plugin='MultiProc', plugin_args=plugin_args)
