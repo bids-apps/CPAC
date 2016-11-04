@@ -6,7 +6,6 @@ from subprocess import Popen, PIPE
 from shutil import rmtree
 import subprocess
 import yaml
-#import CPAC.utils as cpac_utils
 import sys
 from bids_utils import gen_bids_sublist
 import datetime, time
@@ -32,12 +31,6 @@ parser.add_argument('analysis_level', help='Level of the analysis that will '
     ' be performed. Multiple participant level analyses can be run '
     ' independently (in parallel) using the same output_dir.',
     choices=['participant', 'group', 'dont_run', 'GUI'])
-parser.add_argument('--participant_label', help='The label of the participant'
-    ' that should be analyzed. The label '
-    'corresponds to sub-<participant_label> from the BIDS spec '
-    '(so it does not include "sub-"). If this parameter is not '
-    'provided all subjects should be analyzed. Multiple '
-    'participants can be specified with a space separated list.', nargs="+")
 parser.add_argument('--pipeline_file', help='Name for the pipeline '
     ' configuration file to use',
     default="/cpac_resources/default_pipeline.yaml")
@@ -54,6 +47,13 @@ parser.add_argument('--mem', help='Amount of RAM available to the pipeline'
     '(GB).', default="6")
 parser.add_argument('--save_working_dir', action='store_true',
     help='Save the contents of the working directory.', default=False)
+parser.add_argument('--participant_label', help='The label of the participant'
+    ' that should be analyzed. The label '
+    'corresponds to sub-<participant_label> from the BIDS spec '
+    '(so it does not include "sub-"). If this parameter is not '
+    'provided all subjects should be analyzed. Multiple '
+    'participants can be specified with a space separated list. To work correctly this should '
+    'come at the end of the command line', nargs="+")
 
 # get the command line arguments
 args = parser.parse_args()
@@ -63,7 +63,15 @@ run("bids-validator %s"%args.bids_dir)
 
 print(args)
 
-# get and set configuration
+# if we are running the GUI, then get to it
+if args.analysis_level == "GUI":
+    print "Startig CPAC GUI"
+    import CPAC
+    CPAC.GUI.run()
+    sys.exit(1)
+
+# otherwise, if we are running group, participant, or dry run we
+# begin by conforming the configuration
 c = yaml.load(open(os.path.realpath(args.pipeline_file), 'r'))
 
 # set the parameters using the command line arguements
@@ -96,12 +104,21 @@ print ("Available memory: %d (GB)"%(c['memoryAllocatedPerSubject']))
 print ("Available threads: %d"%(c['numCoresPerSubject']))
 print ("Number of threads for ANTs: %d"%(c['num_ants_threads']))
 
-#create subject list
+#update config file
+config_file=os.path.join(args.output_dir,"cpac_pipeline_config_%s.yml"%(st))
+with open(config_file, 'w') as f:
+    yaml.dump(c, f)
+
+# we have all we need if we are doing a group level analysis
 if args.analysis_level == "group":
-    print "Group level analysis is not currently supported yet"
-    sys.exit(0)
+
+    print "Starting group level analysis of data in %s using %s"%(args.bids_dir, config_file)
+    import CPAC
+    CPAC.pipeline.cpac_group_runner.run(config_file, args.bids_dir)
+    sys.exit(1)
 
 
+# otherwise we move on to conforming the data configuration
 if not args.data_config_file:
     file_paths=[]
 
@@ -138,16 +155,12 @@ else:
             print "Did not find data for %s in %s"%(", ".join(args.participant_label), args.data_config_file)
             sys.exit(1)
 
+# write out the data configuration file
 ts = time.time()
 st = datetime.datetime.fromtimestamp(ts).strftime('%Y%m%d%H%M%S')
-subject_list_file=os.path.join(args.output_dir,"bids_run_sublist_%s.yml"%(st))
+subject_list_file=os.path.join(args.output_dir,"cpac_data_config_%s.yml"%(st))
 with open(subject_list_file, 'w') as f:
     yaml.dump(sub_list, f)
-
-#update config file
-config_file=os.path.join(args.output_dir,"bids_run_config_%s.yml"%(st))
-with open(config_file, 'w') as f:
-    yaml.dump(c, f)
 
 if args.analysis_level == "participant":
     #build pipeline easy way
@@ -158,10 +171,11 @@ if args.analysis_level == "participant":
                    'memory_gb': int(args.mem),
                    'callback_log' : log_nodes_cb}
 
+    print "Starting participant level processing"
     CPAC.pipeline.cpac_runner.run(config_file, subject_list_file,
         plugin='MultiProc', plugin_args=plugin_args)
+else:
+    print "This has been a dry run, the pipeline and data configuration files should" + \
+        " have been written to %s and %s respectively. CPAC will not be run."%(config_file,subject_list_file)
 
-elif args.analysis_level == "GUI":
-
-    import CPAC
-    CPAC.GUI.run()
+sys.exit(1)
