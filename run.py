@@ -183,10 +183,11 @@ else:
 
 if args.participant_ndx:
     if 0 <= int(args.participant_ndx) < len(sub_list):
-        sub_list = sub_list[int(args.participant_ndx)]
-        subject_list_file = os.path.join(args.output_dir, "cpac_data_config_pt%s_%s.yml" % (sub_list,st))
+        # make sure to keep it a list
+        sub_list = [sub_list[int(args.participant_ndx)]]
+        subject_list_file = os.path.join(args.output_dir, "cpac_data_config_pt%s_%s.yml" % (args.participant_ndx,st))
     else:
-        print ("Participant ndx %d is out of bounds [0,%d)"%(int(args.participant_ndx,len(sub_list))))
+        print ("Participant ndx %d is out of bounds [0,%d)"%(int(args.participant_ndx),len(sub_list)))
         sys.exit(1)
 else:
     # write out the data configuration file
