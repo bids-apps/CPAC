@@ -3,12 +3,12 @@ import argparse
 import os
 from glob import glob
 from subprocess import Popen, PIPE
-from shutil import rmtree
 import subprocess
 import yaml
 import sys
-from bids_utils import gen_bids_sublist
+
 import datetime, time
+
 
 def run(command, env={}):
     process = Popen(command, stdout=PIPE, stderr=subprocess.STDOUT,
@@ -54,11 +54,17 @@ parser.add_argument('--participant_label', help='The label of the participant'
     'provided all subjects should be analyzed. Multiple '
     'participants can be specified with a space separated list. To work correctly this should '
     'come at the end of the command line', nargs="+")
+parser.add_argument('--participant_ndx', help='The index of the participant'
+    ' that should be analyzed. This corresponds to the index of the participant in'
+    ' the subject list file. This was added to make it easier to accomodate SGE'
+    ' array jobs. Only a single participant will be analyzed. Can be used with'
+    ' participant label, in which case it is the index into the list that follows'
+    ' the particpant_label flag.', default=None)
 
 # get the command line arguments
 args = parser.parse_args()
 
-#print(args)
+print(args)
 
 # if we are running the GUI, then get to it
 if args.analysis_level == "GUI":
@@ -107,7 +113,7 @@ if args.participant_label:
     print ("#### Running C-PAC on %s"%(args.participant_label))
 else:
     print ("#### Running C-PAC")
-    
+
 print ("Number of subjects to run in parallel: %d"%(c['numSubjectsAtOnce']))
 print ("Output directory: %s"%(c['outputDirectory']))
 print ("Working directory: %s"%(c['workingDirectory']))
@@ -155,7 +161,9 @@ if not args.data_config_file:
         print ("Did not find any files to process")
         sys.exit(1)
 
+    from bids_utils import gen_bids_sublist
     sub_list = gen_bids_sublist(file_paths)
+
 else:
     # load the file as a check to make sure it is available and readable
     sub_list = yaml.load(open(os.path.realpath(args.data_config_file), 'r'))
@@ -173,8 +181,17 @@ else:
             print ("Did not find data for %s in %s"%(", ".join(args.participant_label), args.data_config_file))
             sys.exit(1)
 
-# write out the data configuration file
-subject_list_file=os.path.join(args.output_dir,"cpac_data_config_%s.yml"%(st))
+if args.participant_ndx:
+    if 0 <= int(args.participant_ndx) < len(sub_list):
+        sub_list = sub_list[int(args.participant_ndx)]
+        subject_list_file = os.path.join(args.output_dir, "cpac_data_config_pt%s_%s.yml" % (sub_list,st))
+    else:
+        print ("Participant ndx %d is out of bounds [0,%d)"%(int(args.participant_ndx,len(sub_list))))
+        sys.exit(1)
+else:
+    # write out the data configuration file
+    subject_list_file=os.path.join(args.output_dir,"cpac_data_config_%s.yml"%(st))
+
 with open(subject_list_file, 'w') as f:
     yaml.dump(sub_list, f)
 
