@@ -104,6 +104,10 @@ print ("Available memory: %d (GB)"%(c['memoryAllocatedPerSubject']))
 print ("Available threads: %d"%(c['numCoresPerSubject']))
 print ("Number of threads for ANTs: %d"%(c['num_ants_threads']))
 
+# create a timestamp for writing config files
+ts = time.time()
+st = datetime.datetime.fromtimestamp(ts).strftime('%Y%m%d%H%M%S')
+
 #update config file
 config_file=os.path.join(args.output_dir,"cpac_pipeline_config_%s.yml"%(st))
 with open(config_file, 'w') as f:
@@ -156,8 +160,6 @@ else:
             sys.exit(1)
 
 # write out the data configuration file
-ts = time.time()
-st = datetime.datetime.fromtimestamp(ts).strftime('%Y%m%d%H%M%S')
 subject_list_file=os.path.join(args.output_dir,"cpac_data_config_%s.yml"%(st))
 with open(subject_list_file, 'w') as f:
     yaml.dump(sub_list, f)
