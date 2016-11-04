@@ -58,10 +58,7 @@ parser.add_argument('--participant_label', help='The label of the participant'
 # get the command line arguments
 args = parser.parse_args()
 
-# validate input dir
-run("bids-validator %s"%args.bids_dir)
-
-print(args)
+#print(args)
 
 # if we are running the GUI, then get to it
 if args.analysis_level == "GUI":
@@ -69,6 +66,19 @@ if args.analysis_level == "GUI":
     import CPAC
     CPAC.GUI.run()
     sys.exit(1)
+
+# check to make sure that the input directory exists
+if not os.path.exists(args.bids_dir):
+    print "Error! Could not find %s"%(args.bids_dir)
+    sys.exit(0)
+
+# check to make sure that the output directory exists
+if not os.path.exists(args.output_dir):
+    print "Error! Could not find %s"%(args.bids_dir)
+    sys.exit(0)
+
+# validate input dir
+run("bids-validator %s"%args.bids_dir)
 
 # otherwise, if we are running group, participant, or dry run we
 # begin by conforming the configuration
