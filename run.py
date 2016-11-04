@@ -31,7 +31,7 @@ parser.add_argument('output_dir', help='The directory where the output files '
 parser.add_argument('analysis_level', help='Level of the analysis that will '
     ' be performed. Multiple participant level analyses can be run '
     ' independently (in parallel) using the same output_dir.',
-    choices=['participant', 'group'])
+    choices=['participant', 'group', 'dont_run', 'GUI'])
 parser.add_argument('--participant_label', help='The label of the participant'
     ' that should be analyzed. The label '
     'corresponds to sub-<participant_label> from the BIDS spec '
@@ -41,9 +41,9 @@ parser.add_argument('--participant_label', help='The label of the participant'
 parser.add_argument('--pipeline_file', help='Name for the pipeline '
     ' configuration file to use',
     default="/cpac_resources/default_pipeline.yaml")
-parser.add_argument('--data_cfg_file', help='Yaml file containing the location'
+parser.add_argument('--data_config_file', help='Yaml file containing the location'
     ' of the data that is to be processed. Can be generated from the CPAC gui.'
-    ' this is not necessary if the data in bids_dir is organized according to'
+    ' This file is not necessary if the data in bids_dir is organized according to'
     ' the BIDS format. This enables support for legacy data organization and'
     ' cloud based storage. A bids_dir must still be specified when using this'
     ' option, but its value will be ignored.',
@@ -102,22 +102,41 @@ if args.analysis_level == "group":
     sys.exit(0)
 
 
-file_paths=[]
+if not args.data_config_file:
+    file_paths=[]
 
-if args.participant_label:
-    for pt in args.participant_label:
-        file_paths+=glob(os.path.join(args.bids_dir,"sub-%s"%(pt),
-            "*","*.nii*"))+glob(os.path.join(args.bids_dir,"sub-%s"%(pt),
-            "*","*","*.nii*"))
+    if args.participant_label:
+        for pt in args.participant_label:
+            if "sub-" not in pt:
+                pt = "sub-%s"%(pt)
+            file_paths+=glob(os.path.join(args.bids_dir,"%s"%(pt),
+                "*","*.nii*"))+glob(os.path.join(args.bids_dir,"%s"%(pt),
+                "*","*","*.nii*"))
+    else:
+        file_paths=glob(os.path.join(args.bids_dir,"*","*","*.nii*"))+\
+                   glob(os.path.join(args.bids_dir,"*","*","*","*.nii*"))
+
+    if not file_paths:
+        print "Did not find any files to process"
+        sys.exit(1)
+
+    sub_list = gen_bids_sublist(file_paths)
 else:
-    file_paths=glob(os.path.join(args.bids_dir,"*","*","*.nii*"))+\
-               glob(os.path.join(args.bids_dir,"*","*","*","*.nii*"))
+    # load the file as a check to make sure it is available and readable
+    sub_list = yaml.load(open(os.path.realpath(args.data_config_file), 'r'))
 
-if not file_paths:
-    print "Did not find any files to process"
-    sys.exit(1)
+    if args.participant_label:
+        t_sub_list = []
+        for sub_dict in sub_list:
+            if sub_dict["subject_id"] in args.participant_label or \
+                sub_dict["subject_id"].replace("sub-","") in args.participant_label:
+                t_sub_list.append(sub_dict)
 
-sub_list = gen_bids_sublist(file_paths)
+        sub_list = t_sub_list
+            
+        if not sub_list:
+            print "Did not find data for %s in %s"%(", ".join(args.participant_label), args.data_config_file)
+            sys.exit(1)
 
 ts = time.time()
 st = datetime.datetime.fromtimestamp(ts).strftime('%Y%m%d%H%M%S')
@@ -130,13 +149,19 @@ config_file=os.path.join(args.output_dir,"bids_run_config_%s.yml"%(st))
 with open(config_file, 'w') as f:
     yaml.dump(c, f)
 
-#build pipeline easy way
-import CPAC
-from nipype.pipeline.plugins.callback_log import log_nodes_cb
+if args.analysis_level == "participant":
+    #build pipeline easy way
+    import CPAC
+    from nipype.pipeline.plugins.callback_log import log_nodes_cb
 
-plugin_args = {'n_procs': int(args.n_cpus),
-               'memory_gb': int(args.mem),
-               'callback_log' : log_nodes_cb}
+    plugin_args = {'n_procs': int(args.n_cpus),
+                   'memory_gb': int(args.mem),
+                   'callback_log' : log_nodes_cb}
 
-CPAC.pipeline.cpac_runner.run(config_file, subject_list_file,
-    plugin='MultiProc', plugin_args=plugin_args)
+    CPAC.pipeline.cpac_runner.run(config_file, subject_list_file,
+        plugin='MultiProc', plugin_args=plugin_args)
+
+elif args.analysis_level == "GUI":
+
+    import CPAC
+    CPAC.GUI.run()
