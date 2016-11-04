@@ -878,10 +878,12 @@ function install_cpac {
     fi
     #source activate cpac
     cd /tmp
-    wget https://github.com/FCP-INDI/C-PAC/archive/v1.0.0.tar.gz
-    tar xzvf v1.0.0.tar.gz
+    #wget https://github.com/FCP-INDI/C-PAC/archive/v1.0.0.tar.gz
+    #tar xzvf v1.0.0.tar.gz
+    git clone https://github.com/FCP-INDI/C-PAC.git C-PAC-1.0.0
     cd C-PAC-1.0.0
     python setup.py install
+    rm -rf /tmp/C-PAC-1.0.0
     #source deactivate
 }
 
