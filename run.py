@@ -136,10 +136,12 @@ with open(config_file, 'w') as f:
 # we have all we need if we are doing a group level analysis
 if args.analysis_level == "group":
 
+    #print ("Starting group level analysis of data in %s using %s"%(args.bids_dir, config_file))
+    #import CPAC
+    #CPAC.pipeline.cpac_group_runner.run(config_file, args.bids_dir)
+    #sys.exit(1)
     print ("Starting group level analysis of data in %s using %s"%(args.bids_dir, config_file))
-    import CPAC
-    CPAC.pipeline.cpac_group_runner.run(config_file, args.bids_dir)
-    sys.exit(1)
+    sys.exit(0)
 
 
 # otherwise we move on to conforming the data configuration
