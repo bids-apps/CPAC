@@ -103,7 +103,11 @@ else:
     c['removeWorkingDir'] = True
     c['workingDirectory'] = os.path.join('/scratch', "working")
 
-print ("#### Running C-PAC on %s"%(args.participant_label))
+if args.participant_label:
+    print ("#### Running C-PAC on %s"%(args.participant_label))
+else:
+    print ("#### Running C-PAC")
+    
 print ("Number of subjects to run in parallel: %d"%(c['numSubjectsAtOnce']))
 print ("Output directory: %s"%(c['outputDirectory']))
 print ("Working directory: %s"%(c['workingDirectory']))
@@ -126,7 +130,7 @@ with open(config_file, 'w') as f:
 # we have all we need if we are doing a group level analysis
 if args.analysis_level == "group":
 
-    print "Starting group level analysis of data in %s using %s"%(args.bids_dir, config_file)
+    print ("Starting group level analysis of data in %s using %s"%(args.bids_dir, config_file))
     import CPAC
     CPAC.pipeline.cpac_group_runner.run(config_file, args.bids_dir)
     sys.exit(1)
@@ -148,7 +152,7 @@ if not args.data_config_file:
                    glob(os.path.join(args.bids_dir,"*","*","*","*.nii*"))
 
     if not file_paths:
-        print "Did not find any files to process"
+        print ("Did not find any files to process")
         sys.exit(1)
 
     sub_list = gen_bids_sublist(file_paths)
@@ -166,7 +170,7 @@ else:
         sub_list = t_sub_list
             
         if not sub_list:
-            print "Did not find data for %s in %s"%(", ".join(args.participant_label), args.data_config_file)
+            print ("Did not find data for %s in %s"%(", ".join(args.participant_label), args.data_config_file))
             sys.exit(1)
 
 # write out the data configuration file
@@ -183,11 +187,11 @@ if args.analysis_level == "participant":
                    'memory_gb': int(args.mem),
                    'callback_log' : log_nodes_cb}
 
-    print "Starting participant level processing"
+    print ("Starting participant level processing")
     CPAC.pipeline.cpac_runner.run(config_file, subject_list_file,
         plugin='MultiProc', plugin_args=plugin_args)
 else:
-    print "This has been a dry run, the pipeline and data configuration files should" + \
-        " have been written to %s and %s respectively. CPAC will not be run."%(config_file,subject_list_file)
+    print ("This has been a dry run, the pipeline and data configuration files should" + \
+        " have been written to %s and %s respectively. CPAC will not be run."%(config_file,subject_list_file))
 
 sys.exit(1)
