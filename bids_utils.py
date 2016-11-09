@@ -1,7 +1,7 @@
 import os
 import yaml
 
-def gen_bids_sublist(paths_list):
+def gen_bids_sublist(paths_list,creds_path):
 
     subdict = {}
 
@@ -26,7 +26,8 @@ def gen_bids_sublist(paths_list):
 
             if f_dict["ses"] not in subdict[f_dict["sub"]]:
                 subdict[f_dict["sub"]][f_dict["ses"]]=\
-                {"subject_id":"-".join(["sub",f_dict["sub"]]),\
+                {"creds_path":creds_path,\
+                 "subject_id":"-".join(["sub",f_dict["sub"]]),\
                  "unique_id":"-".join(["ses",f_dict["ses"]])}
 
             if "t1w" in f_dict["scantype"]:
@@ -42,6 +43,9 @@ def gen_bids_sublist(paths_list):
 
             if "bold" in f_dict["scantype"]:
                 task_key = "-".join(["task",f_dict["task"]])
+                if "run" in f_dict:
+                    task_key = "_".join([task_key,\
+                        "-".join(["run",f_dict["run"]])])
                 if "acq" in f_dict:
                     task_key = "_".join([task_key,\
                         "-".join(["acq",f_dict["acq"]])])
@@ -52,8 +56,7 @@ def gen_bids_sublist(paths_list):
                     subdict[f_dict["sub"]][f_dict["ses"]]["rest"]:
                     subdict[f_dict["sub"]][f_dict["ses"]]["rest"][task_key]=p
                 else:
-                    print "Func file (%s) already found for (%s:%s:%s)"+\
-                        " discarding %s"%(\
+                    print "Func file (%s) already found for (%s:%s:%s) discarding %s"%(\
                         subdict[f_dict["sub"]][f_dict["ses"]]["rest"][task_key],
                         f_dict["sub"],
                         f_dict["ses"],

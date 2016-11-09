@@ -22,11 +22,17 @@ def run(command, env={}):
 
 parser = argparse.ArgumentParser(description='C-PAC Pipeline Runner')
 parser.add_argument('bids_dir', help='The directory with the input dataset '
-    'formatted according to the BIDS standard.')
+    'formatted according to the BIDS standard. Use the format'
+    ' s3://bucket/path/to/bidsdir to read data directly from an S3 bucket.'
+    ' This may require AWS S3 credentials specificied via the'
+    ' --aws_input_creds option.')
 parser.add_argument('output_dir', help='The directory where the output files '
     'should be stored. If you are running group level analysis '
     'this folder should be prepopulated with the results of the '
-    'participant level analysis.')
+    'participant level analysis. Us the format '
+    ' s3://bucket/path/to/bidsdir to write data directly to an S3 bucket.'
+    ' This may require AWS S3 credentials specificied via the'
+    ' --aws_output_creds option.')
 parser.add_argument('analysis_level', help='Level of the analysis that will '
     ' be performed. Multiple participant level analyses can be run '
     ' independently (in parallel) using the same output_dir.',
@@ -40,6 +46,14 @@ parser.add_argument('--data_config_file', help='Yaml file containing the locatio
     ' the BIDS format. This enables support for legacy data organization and'
     ' cloud based storage. A bids_dir must still be specified when using this'
     ' option, but its value will be ignored.',
+    default=None)
+parser.add_argument('--aws_input_creds', help='Credentials for reading from S3.'
+    ' If not provided and s3 paths are specified in the data config '
+    ' we will try to access the bucket anonymously',
+    default=None)
+parser.add_argument('--aws_output_creds', help='Credentials for writing to S3.'
+    ' If not provided and s3 paths are specified in the output directory'
+    ' we will try to access the bucket anonymously',
     default=None)
 parser.add_argument('--n_cpus', help='Number of execution '
     ' resources available for the pipeline', default="1")
@@ -74,13 +88,13 @@ if args.analysis_level == "GUI":
     sys.exit(1)
 
 # check to make sure that the input directory exists
-if not os.path.exists(args.bids_dir):
+if not args.bids_dir.lower().startswith("s3://") and not os.path.exists(args.bids_dir):
     print "Error! Could not find %s"%(args.bids_dir)
     sys.exit(0)
 
 # check to make sure that the output directory exists
-if not os.path.exists(args.output_dir):
-    print "Error! Could not find %s"%(args.bids_dir)
+if not args.output_dir.lower().startswith("s3://") and not os.path.exists(args.output_dir):
+    print "Error! Could not find %s"%(args.output_dir)
     sys.exit(0)
 
 # validate input dir
@@ -94,17 +108,39 @@ c = yaml.load(open(os.path.realpath(args.pipeline_file), 'r'))
 # TODO: we will need to check that the directories exist, and
 # make them if they do not
 c['outputDirectory'] = os.path.join(args.output_dir, "output")
-c['crashLogDirectory'] = os.path.join(args.output_dir, "crash")
-c['logDirectory'] = os.path.join(args.output_dir, "log")
+
+if not "s3://" in args.output_dir.lower():
+    c['crashLogDirectory'] = os.path.join(args.output_dir, "crash")
+    c['logDirectory'] = os.path.join(args.output_dir, "log")
+else:
+    c['crashLogDirectory'] = os.path.join("/scratch", "crash")
+    c['logDirectory'] = os.path.join("/scratch", "log")
 
 c['memoryAllocatedPerSubject'] = int(args.mem)
 c['numCoresPerSubject'] = int(args.n_cpus)
 c['numSubjectsAtOnce'] = 1
 c['num_ants_threads'] = min(int(args.n_cpus), int(c['num_ants_threads']))
 
+if args.aws_input_creds:
+    if os.path.isfile(args.aws_input_creds):
+        c['awsCredentialsFile'] = args.aws_input_creds
+    else:
+        raise IOError("Could not find aws credentials %s"%(args.aws_input_creds))
+
+if args.aws_output_creds:
+    if os.path.isfile(args.aws_output_creds):
+        c['awsOutputBucketCredentials'] = args.aws_output_creds
+    else:
+        raise IOError("Could not find aws credentials %s"%(args.aws_output_creds))
+
 if( args.save_working_dir == True ):
-    c['removeWorkingDir'] = False
-    c['workingDirectory'] = os.path.join(args.output_dir, "working")
+    if "s3://" not in args.output_dir.lower():
+        c['removeWorkingDir'] = False
+        c['workingDirectory'] = os.path.join(args.output_dir, "working")
+    else:
+        print ('Cannot write working directory to S3 bucket (%s).'
+              ' Either change the output directory to something'
+              ' local or turn off the --removeWorkingDir flag')
 else:
     c['removeWorkingDir'] = True
     c['workingDirectory'] = os.path.join('/scratch', "working")
@@ -129,7 +165,11 @@ ts = time.time()
 st = datetime.datetime.fromtimestamp(ts).strftime('%Y%m%d%H%M%S')
 
 #update config file
-config_file=os.path.join(args.output_dir,"cpac_pipeline_config_%s.yml"%(st))
+if not "s3://" in args.output_dir.lower():
+    config_file=os.path.join(args.output_dir,"cpac_pipeline_config_%s.yml"%(st))
+else:
+    config_file=os.path.join("/scratch","cpac_pipeline_config_%s.yml"%(st))
+
 with open(config_file, 'w') as f:
     yaml.dump(c, f)
 
@@ -148,7 +188,33 @@ if args.analysis_level == "group":
 if not args.data_config_file:
     file_paths=[]
 
-    if args.participant_label:
+    if args.bids_dir.lower().startswith("s3://"):
+        bucket_name = args.bids_dir.split('/')[2]
+        s3_prefix = '/'.join(args.bids_dir.split('/')[:3])
+        prefix = args.bids_dir.replace(s3_prefix, '').lstrip('/')
+
+        creds_path = ""
+        if args.aws_input_creds:
+            if not os.path.isfile(args.aws_input_creds):
+                 raise IOError("Could not filed aws_input_creds (%s)"%(args.aws_input_creds))
+            creds_path = args.aws_input_creds
+
+        from indi_aws import fetch_creds
+        bucket = fetch_creds.return_bucket(creds_path, bucket_name)
+
+        if args.participant_label:
+             for pt in args.participant_label:
+                 pt=pt.lstrip("sub-")
+                 t_prefix="%/sub-%s"%(prefix,pt)
+
+                 for s3_obj in bucket.objects.filter(Prefix=t_prefix):
+                     file_paths.append(os.path.join(s3_prefix,str(s3_obj.key)))
+        else:
+            print "gathering files for %s"%(prefix)
+            for s3_obj in bucket.objects.filter(Prefix=prefix):
+                file_paths.append(os.path.join(s3_prefix,str(s3_obj.key)))
+    
+    elif args.participant_label:
         for pt in args.participant_label:
             if "sub-" not in pt:
                 pt = "sub-%s"%(pt)
@@ -164,7 +230,12 @@ if not args.data_config_file:
         sys.exit(1)
 
     from bids_utils import gen_bids_sublist
-    sub_list = gen_bids_sublist(file_paths)
+    sub_list = gen_bids_sublist(file_paths,args.aws_input_creds)
+
+    if not sub_list:
+        print "Did not find data in %s"%(args.bids_dir)
+        sys.exit(1)
+
 
 else:
     # load the file as a check to make sure it is available and readable
@@ -187,13 +258,18 @@ if args.participant_ndx:
     if 0 <= int(args.participant_ndx) < len(sub_list):
         # make sure to keep it a list
         sub_list = [sub_list[int(args.participant_ndx)]]
-        subject_list_file = os.path.join(args.output_dir, "cpac_data_config_pt%s_%s.yml" % (args.participant_ndx,st))
+        subject_list_file = "cpac_data_config_pt%s_%s.yml" % (args.participant_ndx,st)
     else:
         print ("Participant ndx %d is out of bounds [0,%d)"%(int(args.participant_ndx),len(sub_list)))
         sys.exit(1)
 else:
     # write out the data configuration file
-    subject_list_file=os.path.join(args.output_dir,"cpac_data_config_%s.yml"%(st))
+    subject_list_file = "cpac_data_config_%s.yml"%(st)
+
+if "s3://" not in args.output_dir.lower():
+    subject_list_file = os.path.join(args.output_dir,subject_list_file)
+else:
+    subject_list_file = os.path.join("/scratch",subject_list_file)
 
 with open(subject_list_file, 'w') as f:
     yaml.dump(sub_list, f)

@@ -35,7 +35,7 @@ ubuntu_packages=("cmake" "git" "graphviz" "graphviz-dev" "gsl-bin" "libcanberra-
 
 conda_packages=("pandas" "cython" "numpy" "scipy" "matplotlib" "networkx" "traits" "pyyaml" "jinja2" "nose" "ipython" "pip" "wxpython")
 
-pip_packages=("future" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel" "nipype" "patsy" "memory_profiler" "psutil" "configparser")
+pip_packages=("future" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel" "nipype" "patsy" "memory_profiler" "psutil" "configparser" "indi_tools")
 
 function set_system_deps {
     system_pkgs=''
@@ -420,14 +420,27 @@ function get_missing_python_dependencies {
         python_dependencies_installed=1
         for p in ${pip_packages[@]}
         do
-            /usr/local/bin/miniconda/bin/python -c "import ${p}" 2> /dev/null
-            if [ $? -ne 0 ]
+            if [ ${p} == "indi_tools" ]
             then
-                echo "[ $(date) ] : Python package $p not installed" >> ~/cpac.log
-                missing_pip_dependencies+=($p)
-                python_dependencies_installed=0
+                /usr/local/bin/miniconda/bin/python -c "import indi_aws" 2> /dev/null
+                if [ $? -ne 0 ]
+                then
+                    echo "[ $(date) ] : Python package $p not installed" >> ~/cpac.log
+                    missing_pip_dependencies+=($p)
+                    python_dependencies_installed=0
+                else
+                    echo "[ $(date) ] : Python package $p installed" >> ~/cpac.log
+                fi
             else
-                echo "[ $(date) ] : Python package $p installed" >> ~/cpac.log
+                /usr/local/bin/miniconda/bin/python -c "import ${p}" 2> /dev/null
+                if [ $? -ne 0 ]
+                then
+                    echo "[ $(date) ] : Python package $p not installed" >> ~/cpac.log
+                    missing_pip_dependencies+=($p)
+                    python_dependencies_installed=0
+                else
+                    echo "[ $(date) ] : Python package $p installed" >> ~/cpac.log
+                fi
             fi
         done
 
