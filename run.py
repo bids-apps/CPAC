@@ -290,4 +290,4 @@ else:
     print ("This has been a dry run, the pipeline and data configuration files should" + \
         " have been written to %s and %s respectively. CPAC will not be run."%(config_file,subject_list_file))
 
-sys.exit(1)
+sys.exit(0)

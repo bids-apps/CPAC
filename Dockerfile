@@ -32,10 +32,14 @@ RUN apt-get update && \
 RUN npm install -g bids-validator
 
 # install FSL
+# and remove big atlases we do not use
 RUN wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list && \
             apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9 && \
             apt-get update && \
-            apt-get install -y fsl-5.0-complete
+            apt-get install -y fsl-5.0-complete && \
+            rm -r /usr/share/fsl/data/first && \
+            rm -r /usr/share/fsl/data/possum
+
 
 # install C3d
 RUN  wget http://sourceforge.net/projects/c3d/files/c3d/c3d-0.8.2/c3d-0.8.2-Linux-x86_64.tar.gz && \
@@ -51,15 +55,17 @@ RUN apt-get update && \
     apt-get install -y ants
 
 # install AFNI
-RUN wget http://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz && \
-    tar xfz linux_openmp_64.tgz && \
-    mv linux_openmp_64 /opt/afni && \
+COPY afni_minimal.tar.gz /tmp/
+
+RUN tar xfz /tmp/afni_minimal.tar.gz && \
+    mv afni_minimal /opt/afni && \
+    rm /tmp/afni_minimal.tar.gz && \
     export PATH=/opt/afni:$PATH && \
     export DYLD_FALLBACK_LIBRARY_PATH=/opt/afni && \
     echo '# Path to AFNI' >> ~/cpac_env.sh && \
     echo 'export PATH=/opt/afni:$PATH' >> ~/cpac_env.sh && \
-    echo 'export DYLD_FALLBACK_LIBRARY_PATH=/opt/afni' >> ~/cpac_env.sh && \
-    rm -rf linux_openmp_64.gz
+    echo 'export DYLD_FALLBACK_LIBRARY_PATH=/opt/afni' >> ~/cpac_env.sh
+
 
 COPY cpac_install.sh /tmp/cpac_install.sh
 
