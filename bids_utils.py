@@ -1,6 +1,80 @@
 import os
 import yaml
 
+def gen_bids_outputs_sublist(base_path,paths_list,key_list,creds_path):
+
+    import copy 
+
+    func_keys = [ "functional_to_anat_linear_xfm", "motion_params", "movement_parameters", "motion_correct" ]
+    top_keys = list(set(key_list) - set(func_keys))
+    bot_keys = list(set(key_list).intersection(func_keys))
+
+    print top_keys
+    print bot_keys
+
+    subjdict = {}
+
+    if not base_path.endswith('/'):
+        base_path=base_path+'/'
+
+    # output directories are a bit different than standard BIDS, so 
+    # we handle things differently
+
+    for p in paths_list:
+        p = p.rstrip()
+
+        # find the participant and session info which should be at
+        # some level in the path
+        path_base=p.replace(base_path,'')
+
+        subj_info=path_base.split('/')[0]
+        resource=path_base.split('/')[1]
+
+        if resource not in key_list:
+            continue
+
+        if subj_info not in subjdict:
+            subjdict[subj_info]={"subj_info":subj_info}
+
+        if creds_path:
+            subjdict[subj_info]["creds_path"]=creds_path
+
+        if resource in func_keys:
+            run_info=path_base.split('/')[2]
+            if "funcs" not in subjdict[subj_info]:
+                subjdict[subj_info]["funcs"]={}
+            if run_info not in subjdict[subj_info]["funcs"]:
+                subjdict[subj_info]["funcs"][run_info]={'run_info':run_info} 
+            if resource in subjdict[subj_info]["funcs"][run_info]:
+                print "warning resource %s already exists in subjdict ??"%(resource)
+            subjdict[subj_info]["funcs"][run_info][resource]=p
+        else:
+            subjdict[subj_info][resource]=p
+            
+    sublist = []
+    for subj_info,subj_res in subjdict.iteritems():
+        missing=0
+        for tkey in top_keys:
+            if tkey not in subj_res:
+                 print "%s not found for %s"%(tkey,subj_info)
+                 missing+=1
+                 break
+
+        if missing == 0:
+            for func_key,func_res in subj_res["funcs"].iteritems():
+                for bkey in bot_keys:
+                    if bkey not in func_res:
+                        print "%s not found for %s"%(bkey,func_key)
+                        missing+=1
+                        break
+                if missing == 0:
+                    print "adding: %s, %s, %d"%(subj_info,func_key,len(sublist))
+                    tdict=copy.deepcopy(subj_res)
+                    del tdict["funcs"]
+                    tdict.update(func_res)
+                    sublist.append(tdict)
+    return sublist
+
 def gen_bids_sublist(paths_list,creds_path):
 
     subdict = {}
@@ -20,6 +94,9 @@ def gen_bids_sublist(paths_list,creds_path):
 
             if "ses" not in f_dict:
                 f_dict["ses"] = "1"
+
+            if "sub" not in f_dict:
+                raise IOError("sub not found in %s, perhaps it isn't in BIDS format?"%(p))
 
             if f_dict["sub"] not in subdict:
                 subdict[f_dict["sub"]] = {}
