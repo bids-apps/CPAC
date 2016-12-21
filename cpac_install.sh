@@ -74,7 +74,7 @@ function set_system_deps {
     then
         # take care of initing apt-get and installing wget
         echo "!!!!!! CC"
-        apt-get update && apt-get upgrade -y && apt-get install -y wget
+        apt-get update && apt-get install -y wget
         system_pkgs=${ubuntu_packages[@]}
     else
         echo "Unknown distribution ${DISTRO}"
@@ -527,7 +527,7 @@ function install_fsl {
             wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list
             apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9
             apt-get update
-            apt-get install -y fsl-5.0-complete
+            apt-get install -y fsl-5.0-core fsl-5.0-doc fsl-atlases fslview
             if [ $? -ne 0 ]
             then
                 echo "FSL Install failed!"
@@ -891,10 +891,16 @@ function install_cpac {
     fi
     #source activate cpac
     cd /tmp
-    #wget https://github.com/FCP-INDI/C-PAC/archive/v1.0.0.tar.gz
-    #tar xzvf v1.0.0.tar.gz
-    git clone https://github.com/FCP-INDI/C-PAC.git C-PAC-1.0.0
-    cd C-PAC-1.0.0
+
+    latest_version=$(curl -s https://api.github.com/repos/fcp-indi/C-PAC/releases/latest | grep tag_name | cut -d"\"" -f4)
+    cpac_latest=C-PAC-${latest_version##v}
+
+    wget https://github.com/FCP-INDI/C-PAC/archive/${latest_version}.tar.gz
+    tar xzvf ${latest_version}.tar.gz
+    cd ${cpac_latest}
+    python setup.py install
+    rm -rf /tmp/${cpac_latest}
+
     python setup.py install
     rm -rf /tmp/C-PAC-1.0.0
     #source deactivate

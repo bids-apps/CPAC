@@ -23,22 +23,20 @@ RUN mkdir /scratch && mkdir /local-scratch && mkdir -p /code && mkdir -p /cpac_r
 RUN apt-get update && apt-get install -y wget
 
 ## Install the validator
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -sL https://deb.nodesource.com/setup_4.x | bash - && \
-    apt-get remove -y curl && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN npm install -g bids-validator
+#RUN apt-get update && \
+    #apt-get install -y curl && \
+    ##curl -sL https://deb.nodesource.com/setup_4.x | bash - && \
+    #apt-get remove -y curl && \
+    #apt-get install -y nodejs && \
+    #rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+#RUN npm install -g bids-validator
 
 # install FSL
 # and remove big atlases we do not use
 RUN wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list && \
             apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9 && \
             apt-get update && \
-            apt-get install -y fsl-5.0-complete && \
-            rm -r /usr/share/fsl/data/first && \
-            rm -r /usr/share/fsl/data/possum
+            apt-get install -y fsl-5.0-core fsl-5.0-doc fsl-atlases fslview
 
 
 # install C3d

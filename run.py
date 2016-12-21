@@ -35,8 +35,11 @@ parser.add_argument('output_dir', help='The directory where the output files '
     ' --aws_output_creds option.')
 parser.add_argument('analysis_level', help='Level of the analysis that will '
     ' be performed. Multiple participant level analyses can be run '
-    ' independently (in parallel) using the same output_dir.',
-    choices=['participant', 'group', 'dont_run', 'GUI'])
+    ' independently (in parallel) using the same output_dir. '
+    ' GUI will open the CPAC gui (currently only works with singularity) and'
+    ' test_config will run through the entire configuration process but will'
+    ' not execute the pipeline.',
+    choices=['participant', 'group', 'test_config', 'GUI'])
 parser.add_argument('--pipeline_file', help='Name for the pipeline '
     ' configuration file to use',
     default="/cpac_resources/default_pipeline.yaml")
@@ -57,8 +60,10 @@ parser.add_argument('--aws_output_creds', help='Credentials for writing to S3.'
     default=None)
 parser.add_argument('--n_cpus', help='Number of execution '
     ' resources available for the pipeline', default="1")
-parser.add_argument('--mem', help='Amount of RAM available to the pipeline'
-    '(GB).', default="6")
+parser.add_argument('--mem_mb', help='Amount of RAM available to the pipeline in megabytes.'
+    ' Included for compatibility with BIDS-Apps standard, but mem_gb is preferred')
+parser.add_argument('--mem_gb', help='Amount of RAM available to the pipeline in gigabytes.'
+    ' if this is specified along with mem_mb, this flag will take precedence.')
 parser.add_argument('--save_working_dir', action='store_true',
     help='Save the contents of the working directory.', default=False)
 parser.add_argument('--participant_label', help='The label of the participant'
@@ -116,7 +121,13 @@ else:
     c['crashLogDirectory'] = os.path.join("/scratch", "crash")
     c['logDirectory'] = os.path.join("/scratch", "log")
 
-c['memoryAllocatedPerSubject'] = int(args.mem)
+if args.mem_gb:
+    c['memoryAllocatedPerSubject'] = float(args.mem_gb)
+elif args.mem_mb:
+    c['memoryAllocatedPerSubject'] = float(args.mem_mb)/1024.0
+else:
+    c['memoryAllocatedPerSubject'] = 6.0
+
 c['numCoresPerSubject'] = int(args.n_cpus)
 c['numSubjectsAtOnce'] = 1
 c['num_ants_threads'] = min(int(args.n_cpus), int(c['num_ants_threads']))
@@ -287,7 +298,7 @@ if args.analysis_level == "participant":
     CPAC.pipeline.cpac_runner.run(config_file, subject_list_file,
         plugin='MultiProc', plugin_args=plugin_args)
 else:
-    print ("This has been a dry run, the pipeline and data configuration files should" + \
+    print ("This has been a test run, the pipeline and data configuration files should" + \
         " have been written to %s and %s respectively. CPAC will not be run."%(config_file,subject_list_file))
 
 sys.exit(0)
