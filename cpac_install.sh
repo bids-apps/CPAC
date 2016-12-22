@@ -26,7 +26,7 @@ centos7_packages=("mesa-libGLU-9.0.0-4.el7.x86_64" "gsl-1.15-13.el7.x86_64"\
     "libcanberra-gtk2" "libxml-devel" "libpng12.x86_64")
 
 # are all of the ubuntu packages the same regardless of the version?
-ubuntu_packages=("cmake" "git" "graphviz" "graphviz-dev" "gsl-bin" "libcanberra-gtk-module" \
+ubuntu_packages=("cmake" "curl" "git" "graphviz" "graphviz-dev" "gsl-bin" "libcanberra-gtk-module" \
     "libexpat1-dev" "libgiftiio-dev" "libglib2.0-dev" "libglu1-mesa" "libglu1-mesa-dev" \
     "libgsl0-dev" "libjpeg-progs" "libmotif-dev" "libxml2" "libxml2-dev" "libxext-dev" \
     "libxft2" "libxft-dev" "libxi-dev" "libxmu-headers" "libxmu-dev" "libxpm-dev" "libxslt1-dev" \

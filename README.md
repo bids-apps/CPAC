@@ -11,21 +11,28 @@ C-PAC is implemented in Python using the Nipype pipelining [[1](#nipype)] librar
 docker container, when built, is an application for performing participant level analyses. Future releases will include
 group-level analyses, when there is a BIDS standard for handling derivatives and group models.
 
-You can either perform a custom processing using a YAML configuration file, or use the default processing pipeline.
-Using the 'GUI' analysis level keyword, you can invoke a GUI to aid in pipeline customization. The default behavior is
-to read in data that is organized in the BIDS format. This includes data that is in Amazon AWS S3 by using the format
-s3://<bucket_name>/<bids_dir> to specify the bids_dir command line argument. Outputs can be written to S3 using the
-same format for the output_dir. Credentials for accessing these buckets can be specified on the command line.
+### Usage notes
 
-Paths to the data to be processed can also be passed to C-PAC using a data configuration yaml file, which allows this
-app to use non-BIDS formatted data. This file can be generated using the C-PAC GUI (start the app with the 'GUI'
-analysis level) or can be created using other means, please refer to CPAC documentation for more information.
+1. You can either perform a custom processing using a YAML configuration file or use the default processing pipeline. A
+GUI can be invoked to assist in pipeline custimization by specifying `GUI` command line arguement (this currently only
+works for Singularity containers).
 
-When the app is run, it will output the data configuration file to the working directory. This file can be passed into
-subsequent runs, which avoids the overhead of parsing the BIDS input directory on subsequent runs (i.e. for cluster or
-cloud runs). These files can be generated without executing the C-PAC pipeline using the 'test_run' analysis level. The
-'participant_label' and 'participant_ndx' arguments allow the user to specify which of the many datasets should be
- processed, this are useful when parallelizing the run of multiple participants.
+2. The default behavior is to read in data that is organized in the BIDS format. This includes data that is in Amazon
+AWS S3 by using the format `s3://<bucket_name>/<bids_dir>` for the `bids_dir` command line argument. Outputs can be
+written to S3 using the same format for the output_dir. Credentials for accessing these buckets can be specified on the
+command line (using `--aws_input_creds` or `--aws_output_creds`).
+
+3. Non-BIDS organized data can processed using a C-PAC data configuration yaml file. This file can be generated using
+the C-PAC GUI (start the app with the `GUI` argument) or can be created using other means, please refer to [CPAC
+documentation](http://fcp-indi.github.io/docs/user/subject_list_config.html) for more information.
+
+4. When the app is run, a data configuration file is written to the working directory. This file can be passed into
+subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or
+cloud runs). These files can be generated without executing the C-PAC pipeline using the `test_run` command line
+argument.
+
+5. The `participant_label` and `participant_ndx` arguments allow the user to specify which of the many datasets should
+be processed, this are useful when parallelizing the run of multiple participants.
 
 ### Default configuration
 The default processing pipeline performs fMRI processing using four strategies, with and without global signal
@@ -33,16 +40,16 @@ regression, with and without bandpass filtering.
 
 Anatomical processing begins with conforming the data to RPI orientation and removing orientation header information
 that will interfere with further processing. A  non-linear transform between skull-on images and a 2mm MNI brain-only
-template  are calculated using ANTs [[3](#ants)]. Images are them skull-stripped using AFNI's 3dSkullStrip [[5](#bet)]
-and subsequently segmented into WM, GM, and CSF using FSL’s FAST tool [[6](#fast)]. The resulting WM mask was multiplied
-by a WM prior map that was transformed into individual space using the inverse of the linear transforms previously
-calculated during the ANTs procedure. A CSF mask was multiplied by a ventricle map derived from the Harvard-Oxford atlas
-distributed with FSL [[4](#fsl)]. Skull-stripped images and grey matter tissue maps are written into MNI space at
-2mm resolution.
+template  are calculated using ANTs [[3](#ants)]. Images are them skull-stripped using AFNI's `3dSkullStrip` [[5](#bet)]
+and subsequently segmented into WM, GM, and CSF using FSL’s `fast` tool [[6](#fast)]. The resulting WM mask was
+multiplied by a WM prior map that was transformed into individual space using the inverse of the linear transforms
+previously calculated during the ANTs procedure. A CSF mask was multiplied by a ventricle map derived from the
+Harvard-Oxford atlas distributed with FSL [[4](#fsl)]. Skull-stripped images and grey matter tissue maps are written
+into MNI space at 2mm resolution.
 
 Functional preprocessing begins with resampling the data to RPI orientation, and slice timing correction. Next, motion
 correction is performed using a two-stage approach in which the images are first coregistered to the mean fMRI and then
-a new mean is calculated and used as the target for a second coregistration (AFNI 3dvolreg [[2](#afni)]). A 7 degree of
+a new mean is calculated and used as the target for a second coregistration (AFNI `3dvolreg` [[2](#afni)]). A 7 degree of
 freedom linear transform between the mean fMRI and the structural image is calculated using FSL’s implementation of
 boundary-based registration [[7](#bbr)]. Nuisance variable regression (NVR) is performed on motion corrected data using
 a 2nd order polynomial, a 24-regressor model of motion [[8](#friston24)], 5 nuisance signals, identified via principal
@@ -104,65 +111,154 @@ from a meta-analysis of task results [[19](#do160)]. Time series for 10 ICNs wer
 ## Usage
 This App has the following command line arguments:
 
-		usage: run.py [-h]
-		              [--participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
-                      [--n_cpus #]
-                      [--mem #]
-                      [--save_working_directory]
-		              bids_dir output_dir {participant,group}
+    usage: run.py [-h] [--pipeline_file PIPELINE_FILE]
+                  [--data_config_file DATA_CONFIG_FILE]
+                  [--aws_input_creds AWS_INPUT_CREDS]
+                  [--aws_output_creds AWS_OUTPUT_CREDS] [--n_cpus N_CPUS]
+                  [--mem_mb MEM_MB] [--mem_gb MEM_GB] [--save_working_dir]
+                  [--participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
+                  [--participant_ndx PARTICIPANT_NDX]
+                  bids_dir output_dir {participant,group,test_config,GUI}
 
-		Example BIDS App entrypoint script.
+    C-PAC Pipeline Runner
 
-		positional arguments:
-		  bids_dir              The directory with the input dataset formatted
-		                        according to the BIDS standard.
+    positional arguments:
+      bids_dir              The directory with the input dataset formatted
+                            according to the BIDS standard. Use the format
+                            s3://bucket/path/to/bidsdir to read data directly from
+                            an S3 bucket. This may require AWS S3 credentials
+                            specificied via the --aws_input_creds option.
+      output_dir            The directory where the output files should be stored.
+                            If you are running group level analysis this folder
+                            should be prepopulated with the results of the
+                            participant level analysis. Us the format
+                            s3://bucket/path/to/bidsdir to write data directly to
+                            an S3 bucket. This may require AWS S3 credentials
+                            specificied via the --aws_output_creds option.
+      {participant,group,test_config,GUI}
+                            Level of the analysis that will be performed. Multiple
+                            participant level analyses can be run independently
+                            (in parallel) using the same output_dir. GUI will open
+                            the CPAC gui (currently only works with singularity)
+                            and test_config will run through the entire
+                            configuration process but will not execute the
+                            pipeline.
 
-		  output_dir            The directory where the output files should be stored.
-		                        If you are running group level analysis this folder
-		                        should be prepopulated with the results of
-		                        the participant level analysis.
+    optional arguments:
+      -h, --help            show this help message and exit
+      --pipeline_file PIPELINE_FILE
+                            Name for the pipeline configuration file to use
+      --data_config_file DATA_CONFIG_FILE
+                            Yaml file containing the location of the data that is
+                            to be processed. Can be generated from the CPAC gui.
+                            This file is not necessary if the data in bids_dir is
+                            organized according to the BIDS format. This enables
+                            support for legacy data organization and cloud based
+                            storage. A bids_dir must still be specified when using
+                            this option, but its value will be ignored.
+      --aws_input_creds AWS_INPUT_CREDS
+                            Credentials for reading from S3. If not provided and
+                            s3 paths are specified in the data config we will try
+                            to access the bucket anonymously
+      --aws_output_creds AWS_OUTPUT_CREDS
+                            Credentials for writing to S3. If not provided and s3
+                            paths are specified in the output directory we will
+                            try to access the bucket anonymously
+      --n_cpus N_CPUS       Number of execution resources available for the
+                            pipeline
+      --mem_mb MEM_MB       Amount of RAM available to the pipeline in megabytes.
+                            Included for compatibility with BIDS-Apps standard,
+                            but mem_gb is preferred
+      --mem_gb MEM_GB       Amount of RAM available to the pipeline in gigabytes.
+                            if this is specified along with mem_mb, this flag will
+                            take precedence.
+      --save_working_dir    Save the contents of the working directory.
+      --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
+                            The label of the participant that should be analyzed.
+                            The label corresponds to sub-<participant_label> from
+                            the BIDS spec (so it does not include "sub-"). If this
+                            parameter is not provided all subjects should be
+                            analyzed. Multiple participants can be specified with
+                            a space separated list. To work correctly this should
+                            come at the end of the command line
+      --participant_ndx PARTICIPANT_NDX
+                            The index of the participant that should be analyzed.
+                            This corresponds to the index of the participant in
+                            the subject list file. This was added to make it
+                            easier to accomodate SGE array jobs. Only a single
+                            participant will be analyzed. Can be used with
+                            participant label, in which case it is the index into
+                            the list that follows the particpant_label flag.
 
-		  {participant,group,test_run,GUI}
-		                        Level of the analysis that will be performed. Multiple
-		                        participant level analyses can be run independently
-		                        (in parallel). Group level analysis is not currently supported.
-
-		optional arguments:
-		  -h, --help            show this help message and exit
-
-		  --participant_label   PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
-		                        The label(s) of the participant(s) that should be
-		                        analyzed. The label corresponds to
-		                        sub-<participant_label> from the BIDS spec (so it does
-		                        not include "sub-"). If this parameter is not provided
-		                        all subjects should be analyzed. Multiple participants
-		                        can be specified with a space separated list.
-
-          --pipeline_file       Name for the pipeline configuration file to use, the path
-                                must be accessible from inside the container.
-                                default="/cpac_resources/default_pipeline.yaml"
-
-          --n_cpus              Number of execution resources available for the pipeline
-                                default="1"
-
-          --mem                 Amount of RAM available to the pipeline in GB
-                                default="6"
-
-          --save_working_dir    Indicates that the working directory, which contains
-                                intermediary files, should be saved. If specified, the
-                                working directory will be saved in the output directory.
-
-To run it in participant level mode (for one participant):
+### To run it in participant level mode (for one participant):
 
     docker run -i --rm \
-        -v /tmp:/tmp \
-		-v /Users/filo/data/ds005:/bids_dataset \
-		-v /Users/filo/outputs:/outputs \
-		bids/example \
+        -v /tmp:/scratch \
+        -v /Users/filo/data/ds005:/bids_dataset \
+        -v /Users/filo/outputs:/outputs \
+		bids/cpac \
 		/bids_dataset /outputs participant --participant_label 01
 
-## Example submit script for running as a singularity container on sun grid engine:
 
+### To convert the Docker container to a [Singularity](http://singularity.lbl.gov/) container :
+
+    docker run --privileged -ti --rm  \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v /home/srycajal/singularity_images:/output \
+        filo/docker2singularity \
+        bids/cpac
+
+### Example submit script for running as a Singularity container on sun grid engine:
+
+    #! /bin/bash
+    ## SGE batch file - bgsp
+    #$ -S /bin/bash
+    ## bgsp is the jobname and can be changed
+    #$ -N bgsp
+    ## execute the job using the mpi_smp parallel enviroment and 8 cores per job
+    #$ -pe mpi_smp 8
+    ## create an array of 1112 jobs
+    #$ -t 1-1112
+    #$ -V
+    ## change the following working directory to a persistent directory that is
+    ## available on all nodes, this is were messages printed by the app (stdout
+    ## and stderr) will be stored
+    #$ -wd /home/ubuntu/workspace/cluster_files
+
+    sudo chmod 777 /mnt
+    mkdir -p /mnt/log/reports
+
+    sge_ndx=$(( SGE_TASK_ID - 1 ))
+
+    # random sleep so that jobs dont start at _exactly_ the same time
+    sleep $(( $SGE_TASK_ID % 10 ))
+
+    singularity run -B /home/ubuntu:/mnt -B /mnt:/scratch \
+      /home/ubuntu/workspace/container_build/singularity_images/cpac_latest.img \
+      --n_cpus 8 --mem 12 \
+      --aws_input_creds /mnt/workspace/cluster_files/s3-keys.csv \
+      --aws_output_creds /mnt/workspace/cluster_files/s3-keys.csv \
+      --data_config_file /mnt/workspace/cluster_files/bgsp_data_config.yml \
+      s3://fcp-indi/data/Projects/BrainGenomicsSuperstructProject/orig_bids/ \
+      s3://fcp-indi/data/Projects/BrainGenomicsSuperstructProject/cpac_out/ \
+      participant --participant_ndx ${sge_ndx}
+
+#### Notes:
+1. With the exception of your home directory, which is mounted from the local filesystem, the filesystem in Singularity
+containers is read-only. Files can be easily transferred in and out of the container by mapping local directories to
+directories inside the container using the `-B from:to` command line argument, where the `from` dir is mapped to `to`. 
+When using mapped directories, remember that the paths specified on the command line are in relation to the directory 
+inside the container (e.g. the `to` directory).
+
+2. Unless the `--save_working_dir` flag is set, the C-PAC app will use the `/scratch` directory for intermediary files.
+Since this directory is write protected, a directory from the local filesystem must be mapped to `/scratch` for the
+pipeline to run successfully. This directory should be large  enough to hold all of the intermediary files for the
+datasets that are processed in parallel, as a rule of thumb we suggest 3 GB per dataset. Unless the `--save_working_dir`
+flag is set, the working directory will be deleted when the pipeline has completed.
+
+3. Use the `--save_working_dir` flag to retain all intermediary files, which can be useful for debugging. In this case,
+the intermediary files will be saved in the `working_dir` subdirectory of the user specified `output` directory. This
+will require about 3GB per dataset, but may require more for multiple or very long fMRI scans.
 
 ## Reporting errors and getting help
 Please report errors on the [C-PAC github page issue tracker](https://github.com/FCP-INDI/C-PAC/issues). Please use the
