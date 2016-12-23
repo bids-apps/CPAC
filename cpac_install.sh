@@ -892,7 +892,8 @@ function install_cpac {
     #source activate cpac
     cd /tmp
 
-    latest_version=$(curl -s https://api.github.com/repos/fcp-indi/C-PAC/releases/latest | grep tag_name | cut -d"\"" -f4)
+    # update this for new C-PAC
+    latest_version=v1.0.1a
     cpac_latest=C-PAC-${latest_version##v}
 
     wget https://github.com/FCP-INDI/C-PAC/archive/${latest_version}.tar.gz
@@ -901,8 +902,6 @@ function install_cpac {
     python setup.py install
     rm -rf /tmp/${cpac_latest}
 
-    python setup.py install
-    rm -rf /tmp/C-PAC-1.0.0
     #source deactivate
 }
 
