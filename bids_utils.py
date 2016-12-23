@@ -111,8 +111,7 @@ def gen_bids_sublist(paths_list,creds_path):
                 if not "anat" in subdict[f_dict["sub"]][f_dict["ses"]]:
                     subdict[f_dict["sub"]][f_dict["ses"]]["anat"]=p
                 else:
-                    print "Anatomical file (%s) already found for (%s:%s)"+\
-                        " discarding %s"%(\
+                    print "Anatomical file (%s) already found for (%s:%s) discarding %s"%(\
                         subdict[f_dict["sub"]][f_dict["ses"]]["anat"],
                         f_dict["sub"],
                         f_dict["ses"],

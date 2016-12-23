@@ -70,12 +70,12 @@ parser.add_argument('--participant_label', help='The label of the participant'
     ' that should be analyzed. The label '
     'corresponds to sub-<participant_label> from the BIDS spec '
     '(so it does not include "sub-"). If this parameter is not '
-    'provided all subjects should be analyzed. Multiple '
+    'provided all participants should be analyzed. Multiple '
     'participants can be specified with a space separated list. To work correctly this should '
     'come at the end of the command line', nargs="+")
 parser.add_argument('--participant_ndx', help='The index of the participant'
     ' that should be analyzed. This corresponds to the index of the participant in'
-    ' the subject list file. This was added to make it easier to accomodate SGE'
+    ' the data config file. This was added to make it easier to accomodate SGE'
     ' array jobs. Only a single participant will be analyzed. Can be used with'
     ' participant label, in which case it is the index into the list that follows'
     ' the particpant_label flag.', default=None)
@@ -122,14 +122,14 @@ else:
     c['logDirectory'] = os.path.join("/scratch", "log")
 
 if args.mem_gb:
-    c['memoryAllocatedPerSubject'] = float(args.mem_gb)
+    c['maximumMemoryPerParticipant'] = float(args.mem_gb)
 elif args.mem_mb:
-    c['memoryAllocatedPerSubject'] = float(args.mem_mb)/1024.0
+    c['maximumMemoryPerParticipant'] = float(args.mem_mb)/1024.0
 else:
-    c['memoryAllocatedPerSubject'] = 6.0
+    c['maximumMemoryPerParticipant'] = 6.0
 
-c['numCoresPerSubject'] = int(args.n_cpus)
-c['numSubjectsAtOnce'] = 1
+c['maxCoresPerParticipant'] = int(args.n_cpus)
+c['numParticipantsAtOnce'] = 1
 c['num_ants_threads'] = min(int(args.n_cpus), int(c['num_ants_threads']))
 
 if args.aws_input_creds:
@@ -161,14 +161,14 @@ if args.participant_label:
 else:
     print ("#### Running C-PAC")
 
-print ("Number of subjects to run in parallel: %d"%(c['numSubjectsAtOnce']))
+print ("Number of participants to run in parallel: %d"%(c['numParticipantsAtOnce']))
 print ("Output directory: %s"%(c['outputDirectory']))
 print ("Working directory: %s"%(c['workingDirectory']))
 print ("Crash directory: %s"%(c['crashLogDirectory']))
 print ("Log directory: %s"%(c['logDirectory']))
 print ("Remove working directory: %s"%(c['removeWorkingDir']))
-print ("Available memory: %d (GB)"%(c['memoryAllocatedPerSubject']))
-print ("Available threads: %d"%(c['numCoresPerSubject']))
+print ("Available memory: %d (GB)"%(c['maximumMemoryPerParticipant']))
+print ("Available threads: %d"%(c['maxCoresPerParticipant']))
 print ("Number of threads for ANTs: %d"%(c['num_ants_threads']))
 
 # create a timestamp for writing config files
@@ -255,8 +255,8 @@ else:
     if args.participant_label:
         t_sub_list = []
         for sub_dict in sub_list:
-            if sub_dict["subject_id"] in args.participant_label or \
-                sub_dict["subject_id"].replace("sub-","") in args.participant_label:
+            if sub_dict["participant_id"] in args.participant_label or \
+                sub_dict["participant_id"].replace("sub-","") in args.participant_label:
                 t_sub_list.append(sub_dict)
 
         sub_list = t_sub_list
@@ -269,20 +269,20 @@ if args.participant_ndx:
     if 0 <= int(args.participant_ndx) < len(sub_list):
         # make sure to keep it a list
         sub_list = [sub_list[int(args.participant_ndx)]]
-        subject_list_file = "cpac_data_config_pt%s_%s.yml" % (args.participant_ndx,st)
+        data_config_file = "cpac_data_config_pt%s_%s.yml" % (args.participant_ndx,st)
     else:
         print ("Participant ndx %d is out of bounds [0,%d)"%(int(args.participant_ndx),len(sub_list)))
         sys.exit(1)
 else:
     # write out the data configuration file
-    subject_list_file = "cpac_data_config_%s.yml"%(st)
+    data_config_file = "cpac_data_config_%s.yml"%(st)
 
 if "s3://" not in args.output_dir.lower():
-    subject_list_file = os.path.join(args.output_dir,subject_list_file)
+    data_config_file = os.path.join(args.output_dir,data_config_file)
 else:
-    subject_list_file = os.path.join("/scratch",subject_list_file)
+    data_config_file = os.path.join("/scratch",data_config_file)
 
-with open(subject_list_file, 'w') as f:
+with open(data_config_file, 'w') as f:
     yaml.dump(sub_list, f)
 
 if args.analysis_level == "participant":
@@ -290,15 +290,15 @@ if args.analysis_level == "participant":
     import CPAC
     from nipype.pipeline.plugins.callback_log import log_nodes_cb
 
-    plugin_args = {'n_procs': int(c['numCoresPerSubject']),
-                   'memory_gb': int(c['memoryAllocatedPerSubject']),
+    plugin_args = {'n_procs': int(c['maxCoresPerParticipant']),
+                   'memory_gb': int(c['maximumMemoryPerParticipant']),
                    'callback_log' : log_nodes_cb}
 
     print ("Starting participant level processing")
-    CPAC.pipeline.cpac_runner.run(config_file, subject_list_file,
+    CPAC.pipeline.cpac_runner.run(config_file, data_config_file,
         plugin='MultiProc', plugin_args=plugin_args)
 else:
     print ("This has been a test run, the pipeline and data configuration files should" + \
-        " have been written to %s and %s respectively. CPAC will not be run."%(config_file,subject_list_file))
+        " have been written to %s and %s respectively. CPAC will not be run."%(config_file,data_config_file))
 
 sys.exit(0)
