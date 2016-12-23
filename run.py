@@ -290,8 +290,8 @@ if args.analysis_level == "participant":
     import CPAC
     from nipype.pipeline.plugins.callback_log import log_nodes_cb
 
-    plugin_args = {'n_procs': int(args.n_cpus),
-                   'memory_gb': int(args.mem),
+    plugin_args = {'n_procs': int(c['numCoresPerSubject']),
+                   'memory_gb': int(c['memoryAllocatedPerSubject']),
                    'callback_log' : log_nodes_cb}
 
     print ("Starting participant level processing")
