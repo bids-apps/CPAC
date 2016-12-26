@@ -213,28 +213,21 @@ if not args.data_config_file:
         from indi_aws import fetch_creds
         bucket = fetch_creds.return_bucket(creds_path, bucket_name)
 
-        if args.participant_label:
-             for pt in args.participant_label:
-                 pt=pt.lstrip("sub-")
-                 t_prefix="%/sub-%s"%(prefix,pt)
+        print "gathering files from S3 bucket (%s) for %s"%(bucket,prefix)
+        for s3_obj in bucket.objects.filter(Prefix=prefix):
+            file_paths.append(os.path.join(s3_prefix,str(s3_obj.key)))
 
-                 for s3_obj in bucket.objects.filter(Prefix=t_prefix):
-                     file_paths.append(os.path.join(s3_prefix,str(s3_obj.key)))
-        else:
-            print "gathering files for %s"%(prefix)
-            for s3_obj in bucket.objects.filter(Prefix=prefix):
-                file_paths.append(os.path.join(s3_prefix,str(s3_obj.key)))
-    
-    elif args.participant_label:
-        for pt in args.participant_label:
-            if "sub-" not in pt:
-                pt = "sub-%s"%(pt)
-            file_paths+=glob(os.path.join(args.bids_dir,"%s"%(pt),
-                "*","*.nii*"))+glob(os.path.join(args.bids_dir,"%s"%(pt),
-                "*","*","*.nii*"))
     else:
-        file_paths=glob(os.path.join(args.bids_dir,"*","*","*.nii*"))+\
-                   glob(os.path.join(args.bids_dir,"*","*","*","*.nii*"))
+        for root, dirs, files in os.walk(".", topdown=False):
+            if files:
+                file_paths+=[os.path.join(root,f) for f in files]
+
+    if args.participant_label:
+
+        if 'sub-' not in args.participant_label:
+            args.participant_label = 'sub-'+args.participant_label
+
+        file_paths=[fp for fp in file_paths if args.participant_label in fp]
 
     if not file_paths:
         print ("Did not find any files to process")

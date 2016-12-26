@@ -81,7 +81,7 @@ def gen_bids_sublist(paths_list,creds_path):
 
     for p in paths_list:
         p = p.rstrip()
-        f=os.path.basename(p)
+        f = os.path.basename(p)
         if f.endswith(".nii") or f.endswith(".nii.gz"):
             f_dict={}
             for key_val_pair in f.split("_"):
