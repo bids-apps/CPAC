@@ -197,49 +197,35 @@ if args.analysis_level == "group":
 
 # otherwise we move on to conforming the data configuration
 if not args.data_config_file:
-    file_paths=[]
 
-    if args.bids_dir.lower().startswith("s3://"):
-        bucket_name = args.bids_dir.split('/')[2]
-        s3_prefix = '/'.join(args.bids_dir.split('/')[:3])
-        prefix = args.bids_dir.replace(s3_prefix, '').lstrip('/')
+    from bids_utils import collect_bids_files_configs, bids_gen_cpac_sublist
 
-        creds_path = ""
-        if args.aws_input_creds:
-            if not os.path.isfile(args.aws_input_creds):
-                 raise IOError("Could not filed aws_input_creds (%s)"%(args.aws_input_creds))
-            creds_path = args.aws_input_creds
-
-        from indi_aws import fetch_creds
-        bucket = fetch_creds.return_bucket(creds_path, bucket_name)
-
-        print "gathering files from S3 bucket (%s) for %s"%(bucket,prefix)
-        for s3_obj in bucket.objects.filter(Prefix=prefix):
-            file_paths.append(os.path.join(s3_prefix,str(s3_obj.key)))
-
-    else:
-        for root, dirs, files in os.walk(".", topdown=False):
-            if files:
-                file_paths+=[os.path.join(root,f) for f in files]
+    (file_paths, config) = collect_bids_files_configs(args.bids_dir, args.aws_input_creds)
 
     if args.participant_label:
 
-        if 'sub-' not in args.participant_label:
-            args.participant_label = 'sub-'+args.participant_label
+        pt_file_paths=[]
+        for pt in args.participant_label:
 
-        file_paths=[fp for fp in file_paths if args.participant_label in fp]
+            if 'sub-' not in pt:
+                pt = 'sub-'+pt
+
+            pt_file_paths += [fp for fp in file_paths if pt in fp]
+
+        file_paths = pt_file_paths
 
     if not file_paths:
         print ("Did not find any files to process")
         sys.exit(1)
 
-    from bids_utils import gen_bids_sublist
-    sub_list = gen_bids_sublist(file_paths,args.aws_input_creds)
+    # TODO: once CPAC is updated to use per-scan parameters from subject list,
+    # change the 3rd arguement to the config dict returned from
+    # collect_bids_files_configs
+    sub_list = bids_gen_cpac_sublist(args.bids_dir, file_paths, [], args.aws_input_creds)
 
     if not sub_list:
         print "Did not find data in %s"%(args.bids_dir)
         sys.exit(1)
-
 
 else:
     # load the file as a check to make sure it is available and readable
