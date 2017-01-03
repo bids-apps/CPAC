@@ -47,15 +47,15 @@ pipelineName :  analysis
 
 
 # Directory where CPAC should store temporary and intermediate files.
-workingDirectory :  /scratch
+workingDirectory :  /tmp
 
 
 # Directory where CPAC should write crash logs.
-crashLogDirectory :  /scratch
+crashLogDirectory :  /tmp
 
 
 # Directory where CPAC should place run logs.
-logDirectory :  /scratch
+logDirectory :  /tmp
 
 
 # Directory where CPAC should place processed data.

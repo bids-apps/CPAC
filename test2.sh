@@ -5,7 +5,7 @@ BUILDIR=$(pwd)
 #docker build -t bids/cpac .
 
 docker run -ti --rm --read-only \
-    -v /tmp:/scratch \
+    -v /tmp:/tmp \
     -v /var/tmp:/var/tmp \
     -v ${BUILDIR}:/code \
     -v ${BUILDIR}/data/ds114_test1:/bids_dataset \
