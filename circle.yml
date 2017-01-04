@@ -24,8 +24,7 @@ dependencies:
     - mkdir -p ~/docker; docker save "bids/${CIRCLE_PROJECT_REPONAME,,}" > ~/docker/image.tar :
         timeout: 21600
     - mkdir -p ${HOME}/outputs
-    - mkdir -p ${HOME}/singularity_images; docker run --privileged -ti --rm -v /var/run/docker.sock:/var/run/docker.sock -v ${HOME}/singularity_images:/output filo/docker2singularity "bids/${CIRCLE_PROJECT_REPONAME,,}"
-    - for i in ${HOME}/singularity_images/*.img; do mv -v ${i} ${HOME}/singularity_images/singularity.img; done
+
 
 test:
   override:
@@ -51,7 +50,4 @@ deployment:
           timeout: 21600
       - if [[ -n "$DOCKER_PASS" ]]; then echo "deploying!"; docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS && docker tag bids/${CIRCLE_PROJECT_REPONAME,,} bids/${CIRCLE_PROJECT_REPONAME,,}:$CIRCLE_TAG && docker push bids/${CIRCLE_PROJECT_REPONAME,,}:$CIRCLE_TAG; fi :
           timeout: 21600
-      - if [[ -n "$AWS_ACCESS_KEY_ID" ]]; then echo "deploying!"; aws s3 cp --acl public-read ${HOME}/singularity_images/singularity.img s3://fcp_indi/resources/singularity_images/${CIRCLE_PROJECT_REPONAME,,}_latest.img; fi :
-          timeout: 21600
-      - if [[ -n "$AWS_ACCESS_KEY_ID" ]]; then echo "deploying!"; aws s3 cp --acl public-read ${HOME}/singularity_images/singularity.img s3://fcp_indi/resources/singularity_images/${CIRCLE_PROJECT_REPONAME,,}_${CIRCLE_TAG}.img; fi :
-          timeout: 21600
+
