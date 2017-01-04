@@ -75,6 +75,7 @@ RUN /tmp/cpac_install.sh -p
 # install CPAC
 RUN /tmp/cpac_install.sh -n cpac
 
+COPY version /code/version
 COPY bids_utils.py /code/bids_utils.py
 COPY run.py /code/run.py
 COPY cpac_templates.tar.gz /cpac_resources/cpac_templates.tar.gz
@@ -84,7 +85,5 @@ RUN chmod +x /code/run.py && cd /cpac_resources \
 
 COPY default_pipeline.yaml /cpac_resources/default_pipeline.yaml
 COPY test_pipeline.yaml /cpac_resources/test_pipeline.yaml
-
-COPY version /version
 
 ENTRYPOINT ["/code/run.py"]

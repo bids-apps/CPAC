@@ -11,6 +11,12 @@ C-PAC is implemented in Python using the Nipype pipelining [[1](#nipype)] librar
 docker container, when built, is an application for performing participant level analyses. Future releases will include
 group-level analyses, when there is a BIDS standard for handling derivatives and group models.
 
+### A note about versioning
+C-PAC BIDS Apps version tags are composed of the C-PAC version followed by an underscore and then the version of the 
+container. The container version restarts for every new C-PAC version and is a single integer that reflects the 
+modification number of the build. For example ```v1.0.1a_5``` corresponds to the 5th build of the container for C-PAC 
+version v1.0.1a.
+
 ### Usage notes
 
 1. You can either perform a custom processing using a YAML configuration file or use the default processing pipeline. A

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import os
-from glob import glob
 from subprocess import Popen, PIPE
 import subprocess
 import yaml
@@ -9,6 +8,8 @@ import sys
 
 import datetime, time
 
+__version__ = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                'version')).read()
 
 def run(command, env={}):
     process = Popen(command, stdout=PIPE, stderr=subprocess.STDOUT,
@@ -79,6 +80,8 @@ parser.add_argument('--participant_ndx', help='The index of the participant'
     ' array jobs. Only a single participant will be analyzed. Can be used with'
     ' participant label, in which case it is the index into the list that follows'
     ' the particpant_label flag.', default=None)
+parser.add_argument('-v', '--version', action='version',
+                    version='C-PAC BIDS-App version {}'.format(__version__))
 
 # get the command line arguments
 args = parser.parse_args()

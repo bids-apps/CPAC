@@ -2,12 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a85a7f7c-3c28-4802-a2e0-479457a7c66a" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Dockerfile" afterPath="$PROJECT_DIR$/Dockerfile" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/default_pipeline.yaml" afterPath="$PROJECT_DIR$/default_pipeline.yaml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/circle.yml" afterPath="$PROJECT_DIR$/circle.yml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/run.py" afterPath="$PROJECT_DIR$/run.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test1.sh" afterPath="$PROJECT_DIR$/test1.sh" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test2.sh" afterPath="$PROJECT_DIR$/test2.sh" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test_pipeline.yaml" afterPath="$PROJECT_DIR$/test_pipeline.yaml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/version" afterPath="$PROJECT_DIR$/version" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -28,8 +27,8 @@
       <file leaf-file-name="run.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/run.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1548">
-              <caret line="22" column="32" lean-forward="false" selection-start-line="22" selection-start-column="32" selection-end-line="22" selection-end-column="32" />
+            <state relative-caret-position="1044">
+              <caret line="86" column="26" lean-forward="true" selection-start-line="86" selection-start-column="26" selection-end-line="86" selection-end-column="26" />
               <folding>
                 <element signature="e#22#37#0" expanded="true" />
               </folding>
@@ -59,14 +58,12 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="download_test_files.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/download_test_files.py">
+      <file leaf-file-name="Dockerfile" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Dockerfile">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="489">
-              <caret line="43" column="99" lean-forward="false" selection-start-line="43" selection-start-column="99" selection-end-line="43" selection-end-column="99" />
-              <folding>
-                <element signature="e#0#32#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="1584">
+              <caret line="88" column="0" lean-forward="false" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -114,12 +111,11 @@
       <file leaf-file-name="circle.yml" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/circle.yml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-8">
-              <caret line="17" column="166" lean-forward="false" selection-start-line="17" selection-start-column="81" selection-end-line="17" selection-end-column="166" />
+            <state relative-caret-position="-113">
+              <caret line="32" column="61" lean-forward="false" selection-start-line="32" selection-start-column="61" selection-end-line="32" selection-end-column="61" />
               <folding>
-                <marker date="1483301339000" expanded="true" signature="3321:3491" ph="docker ru…-n_cpus 2 : &lt;1 key&gt;" />
-                <marker date="1483301339000" expanded="true" signature="3569:3602" ph="if [[ -n …atest; fi : &lt;1 key&gt;" />
-                <marker date="1483301339000" expanded="true" signature="4048:4078" ph="if [[ -n …E_TAG; fi : &lt;1 key&gt;" />
+                <marker date="1483503012000" expanded="true" signature="3789:3822" ph="if [[ -n …atest; fi : &lt;1 key&gt;" />
+                <marker date="1483503012000" expanded="true" signature="4268:4298" ph="if [[ -n …E_TAG; fi : &lt;1 key&gt;" />
               </folding>
             </state>
           </provider>
@@ -129,8 +125,8 @@
         <entry file="file://$PROJECT_DIR$/README.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="252">
-                <caret line="14" column="0" lean-forward="true" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+              <first_editor relative-caret-position="270">
+                <caret line="15" column="12" lean-forward="false" selection-start-line="15" selection-start-column="12" selection-end-line="15" selection-end-column="12" />
                 <folding />
               </first_editor>
               <second_editor />
@@ -157,8 +153,8 @@
       <find>found</find>
       <find>gen_bids_sublist</find>
       <find>tmp</find>
-      <find>scratch</find>
       <find>scratc</find>
+      <find>scratch</find>
     </findStrings>
     <replaceStrings>
       <replace>tmp</replace>
@@ -170,16 +166,16 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Dockerfile" />
-        <option value="$PROJECT_DIR$/circle.yml" />
         <option value="$PROJECT_DIR$/cpac_install.sh" />
         <option value="$PROJECT_DIR$/download_test_files.py" />
         <option value="$PROJECT_DIR$/bids_utils.py" />
-        <option value="$PROJECT_DIR$/run.py" />
         <option value="$PROJECT_DIR$/default_pipeline.yaml" />
         <option value="$PROJECT_DIR$/test_pipeline.yaml" />
         <option value="$PROJECT_DIR$/test1.sh" />
         <option value="$PROJECT_DIR$/test2.sh" />
+        <option value="$PROJECT_DIR$/Dockerfile" />
+        <option value="$PROJECT_DIR$/run.py" />
+        <option value="$PROJECT_DIR$/circle.yml" />
         <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
@@ -191,10 +187,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="95" />
+    <option name="x" value="10" />
     <option name="y" value="23" />
-    <option name="width" value="1332" />
-    <option name="height" value="821" />
+    <option name="width" value="1430" />
+    <option name="height" value="815" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -516,10 +512,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="95" y="23" width="1332" height="821" extended-state="0" />
+    <frame x="10" y="23" width="1430" height="815" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17492492" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16293706" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3632708" sideWeight="0.503003" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -529,7 +525,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20744681" sideWeight="0.496997" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20911528" sideWeight="0.496997" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -584,9 +580,8 @@
         <state relative-caret-position="435">
           <caret line="29" column="155" lean-forward="false" selection-start-line="29" selection-start-column="0" selection-end-line="30" selection-end-column="0" />
           <folding>
-            <marker date="1483301339000" expanded="true" signature="3321:3491" ph="docker ru…-n_cpus 2 : &lt;1 key&gt;" />
-            <marker date="1483301339000" expanded="true" signature="3569:3602" ph="if [[ -n …atest; fi : &lt;1 key&gt;" />
-            <marker date="1483301339000" expanded="true" signature="4048:4078" ph="if [[ -n …E_TAG; fi : &lt;1 key&gt;" />
+            <marker date="1483503012000" expanded="true" signature="3789:3822" ph="if [[ -n …atest; fi : &lt;1 key&gt;" />
+            <marker date="1483503012000" expanded="true" signature="4268:4298" ph="if [[ -n …E_TAG; fi : &lt;1 key&gt;" />
           </folding>
         </state>
       </provider>
@@ -651,9 +646,8 @@
         <state relative-caret-position="435">
           <caret line="29" column="155" lean-forward="false" selection-start-line="29" selection-start-column="0" selection-end-line="30" selection-end-column="0" />
           <folding>
-            <marker date="1483301339000" expanded="true" signature="3321:3491" ph="docker ru…-n_cpus 2 : &lt;1 key&gt;" />
-            <marker date="1483301339000" expanded="true" signature="3569:3602" ph="if [[ -n …atest; fi : &lt;1 key&gt;" />
-            <marker date="1483301339000" expanded="true" signature="4048:4078" ph="if [[ -n …E_TAG; fi : &lt;1 key&gt;" />
+            <marker date="1483503012000" expanded="true" signature="3789:3822" ph="if [[ -n …atest; fi : &lt;1 key&gt;" />
+            <marker date="1483503012000" expanded="true" signature="4268:4298" ph="if [[ -n …E_TAG; fi : &lt;1 key&gt;" />
           </folding>
         </state>
       </provider>
@@ -796,26 +790,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Dockerfile">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="88" column="0" lean-forward="false" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/circle.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-8">
-          <caret line="17" column="166" lean-forward="false" selection-start-line="17" selection-start-column="81" selection-end-line="17" selection-end-column="166" />
-          <folding>
-            <marker date="1483301339000" expanded="true" signature="3321:3491" ph="docker ru…-n_cpus 2 : &lt;1 key&gt;" />
-            <marker date="1483301339000" expanded="true" signature="3569:3602" ph="if [[ -n …atest; fi : &lt;1 key&gt;" />
-            <marker date="1483301339000" expanded="true" signature="4048:4078" ph="if [[ -n …E_TAG; fi : &lt;1 key&gt;" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test/rs_subject_list_s3.yml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="11128">
@@ -829,7 +803,7 @@
         <state relative-caret-position="489">
           <caret line="43" column="99" lean-forward="false" selection-start-line="43" selection-start-column="99" selection-end-line="43" selection-end-column="99" />
           <folding>
-            <element signature="e#0#32#0" expanded="true" />
+            <element signature="e#0#32#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -839,26 +813,6 @@
         <state relative-caret-position="162">
           <caret line="66" column="0" lean-forward="false" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bids_utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-124">
-          <caret line="502" column="53" lean-forward="false" selection-start-line="502" selection-start-column="53" selection-end-line="502" selection-end-column="53" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/run.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1548">
-          <caret line="22" column="32" lean-forward="false" selection-start-line="22" selection-start-column="32" selection-end-line="22" selection-end-column="32" />
-          <folding>
-            <element signature="e#22#37#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -894,6 +848,45 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Dockerfile">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1584">
+          <caret line="88" column="0" lean-forward="false" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bids_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-124">
+          <caret line="502" column="53" lean-forward="false" selection-start-line="502" selection-start-column="53" selection-end-line="502" selection-end-column="53" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1044">
+          <caret line="86" column="26" lean-forward="true" selection-start-line="86" selection-start-column="26" selection-end-line="86" selection-end-column="26" />
+          <folding>
+            <element signature="e#22#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/circle.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-113">
+          <caret line="32" column="61" lean-forward="false" selection-start-line="32" selection-start-column="61" selection-end-line="32" selection-end-column="61" />
+          <folding>
+            <marker date="1483503012000" expanded="true" signature="3789:3822" ph="if [[ -n …atest; fi : &lt;1 key&gt;" />
+            <marker date="1483503012000" expanded="true" signature="4268:4298" ph="if [[ -n …E_TAG; fi : &lt;1 key&gt;" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider editor-type-id="text-editor">
         <state relative-caret-position="-270">
@@ -903,8 +896,8 @@
       </provider>
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
-          <first_editor relative-caret-position="252">
-            <caret line="14" column="0" lean-forward="true" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+          <first_editor relative-caret-position="270">
+            <caret line="15" column="12" lean-forward="false" selection-start-line="15" selection-start-column="12" selection-end-line="15" selection-end-column="12" />
             <folding />
           </first_editor>
           <second_editor />
