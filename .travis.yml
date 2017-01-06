@@ -4,10 +4,11 @@ services:
   - docker
 
 before_install:
+  - docker build -t bids/cpac .
   - docker pull fstab/aws-cli
   - docker pull filo/docker2singularity
   - mkdir -p ${HOME}/singularity_images
-  - docker run -ti --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ${HOME}/singularity_images:/output filo/docker2singularity "bids/cpac:latest"
+  - docker run -ti --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ${HOME}/singularity_images:/output filo/docker2singularity "bids/cpac"
   - sing_img=$(ls -t ${HOME}/singularity_images | head -n 1); docker run --rm --privileged -v ${HOME}/singularity_images:/output --entrypoint /output/${sing_img} filo/docker2singularity -h
 
 #script:
