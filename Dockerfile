@@ -35,7 +35,10 @@ RUN npm install -g bids-validator
 RUN wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list && \
             apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9 && \
             apt-get update && \
-            apt-get install -y fsl-5.0-core fsl-5.0-doc fsl-atlases fslview
+            apt-get install -y fsl-5.0-core fsl-5.0-doc fsl-atlases fslview && \
+            apt-get autoclean -y && \
+            apt-get clean -y && \
+            apt-get autoremove -y
 
 
 # install C3d
@@ -49,7 +52,10 @@ RUN  wget http://sourceforge.net/projects/c3d/files/c3d/c3d-0.8.2/c3d-0.8.2-Linu
 
 # install ANTS
 RUN apt-get update && \
-    apt-get install -y ants
+    apt-get install -y ants && \
+    apt-get autoclean -y && \
+    apt-get clean -y && \
+    apt-get autoremove -y
 
 # install AFNI
 COPY afni_minimal.tar.gz /tmp/

@@ -207,6 +207,8 @@ function install_system_dependencies {
            #     fi
            # done
             # finish up
+            apt-get autoclean -y
+            apt-get clean -y
             apt-get autoremove -y
         else
             echo "Linux distribution not recognized.  System-level dependencies cannot" \
@@ -348,6 +350,13 @@ function install_python_dependencies {
         echo "[ $(date) ] Conda install ${p} failed!"
         echo "[ $(date) ] Conda install ${p} failed!" >> ~/cpac.log
         exit 1 
+    fi
+    conda clean -y -t -i
+        if [ $? -ne 0 ]
+    then
+        echo "[ $(date) ] Conda clean failed!"
+        echo "[ $(date) ] Conda clean failed!" >> ~/cpac.log
+        exit 1
     fi
     #for p in ${missing_conda_dependencies[@]}
     #do
@@ -533,7 +542,9 @@ function install_fsl {
                 echo "FSL Install failed!"
                 exit 1
             fi
-
+            apt-get autoclean -y
+            apt-get clean -y
+            apt-get autoremove -y
         fi
         FSLDIR=/usr/share/fsl/5.0
         . ${FSLDIR}/etc/fslconf/fsl.sh
