@@ -6,7 +6,7 @@ services:
   - docker
 
 before_install:
-  - pip install aws
+  - pip install awscli
   - docker build -t bids/cpac .
   - docker pull filo/docker2singularity
   - mkdir -p ${HOME}/singularity_images
