@@ -6,8 +6,8 @@ services:
   - docker
 
 before_install:
+  - pip install aws
   - docker build -t bids/cpac .
-  - docker pull fstab/aws-cli
   - docker pull filo/docker2singularity
   - mkdir -p ${HOME}/singularity_images
   - docker run -ti --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ${HOME}/singularity_images:/output filo/docker2singularity "bids/cpac"
@@ -19,13 +19,11 @@ after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
 
     sing_img=$(ls -t ${HOME}/singularity_images | head -n 1)
-
     version=$( git describe --tags )
 
     echo "$sing_img ... $version"
 
-    docker run -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -v ${HOME}/singularity_images:/output fstab/aws-cli /bin/sh -c "/home/aws/aws/env/bin/aws s3 cp --acl public-read /output/${sing_img} s3://fcp-indi/resources/singularity_images/C-PAC_latest.img"
-
-    docker run -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -v ${HOME}/singularity_images:/output fstab/aws-cli /bin/sh -c "/home/aws/aws/env/bin/aws s3 cp --acl public-read /output/${sing_img} s3://fcp-indi/resources/singularity_images/C-PAC_${version}.img"
+    aws s3 cp --acl public-read /output/${sing_img} s3://fcp-indi/resources/singularity_images/C-PAC_latest.img
+    aws s3 cp --acl public-read /output/${sing_img} s3://fcp-indi/resources/singularity_images/C-PAC_${version}.img
 
     fi
