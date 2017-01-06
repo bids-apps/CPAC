@@ -22,14 +22,10 @@ after_success:
 
     version=$( git describe --tags )
 
-    docker run -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-               -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
-               -v ${HOME}/singularity_images:/output \
-               fstab/aws-cli /bin/sh -c "/home/aws/aws/env/bin/aws s3 cp --acl public-read /output/${sing_img} s3://fcp-indi/resources/singularity_images/C-PAC_latest.img"
+    echo "$sing_img :: $version"
 
-    docker run -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-               -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
-               -v ${HOME}/singularity_images:/output \
-               fstab/aws-cli /bin/sh -c "/home/aws/aws/env/bin/aws s3 cp --acl public-read /output/${sing_img} s3://fcp-indi/resources/singularity_images/C-PAC_${version}.img"
+    docker run -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v ${HOME}/singularity_images:/output fstab/aws-cli /bin/sh -c "/home/aws/aws/env/bin/aws s3 cp --acl public-read /output/${sing_img} s3://fcp-indi/resources/singularity_images/C-PAC_latest.img"
+
+    docker run -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v ${HOME}/singularity_images:/output fstab/aws-cli /bin/sh -c "/home/aws/aws/env/bin/aws s3 cp --acl public-read /output/${sing_img} s3://fcp-indi/resources/singularity_images/C-PAC_${version}.img"
 
     fi
