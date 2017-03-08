@@ -429,6 +429,8 @@ function get_missing_python_dependencies {
         python_dependencies_installed=1
         for p in ${pip_packages[@]}
         do
+            p=$(echo ${p} | cut -d= -f1)
+
             if [ ${p} == "indi_tools" ]
             then
                 /usr/local/bin/miniconda/bin/python -c "import indi_aws" 2> /dev/null
@@ -455,6 +457,9 @@ function get_missing_python_dependencies {
 
         for p in ${conda_packages[@]}
         do
+
+            p=$(echo ${p} | cut -d= -f1)
+
             if [ ${p} == "wxpython" ]
             then
                 /usr/local/bin/miniconda/bin/python -c "import wx" 2> /dev/null
