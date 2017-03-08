@@ -121,8 +121,8 @@ if not "s3://" in args.output_dir.lower():
     c['crashLogDirectory'] = os.path.join(args.output_dir, "crash")
     c['logDirectory'] = os.path.join(args.output_dir, "log")
 else:
-    c['crashLogDirectory'] = os.path.join("/tmp", "crash")
-    c['logDirectory'] = os.path.join("/tmp", "log")
+    c['crashLogDirectory'] = os.path.join("/scratch", "crash")
+    c['logDirectory'] = os.path.join("/scratch", "log")
 
 if args.mem_gb:
     c['maximumMemoryPerParticipant'] = float(args.mem_gb)
@@ -157,7 +157,7 @@ if( args.save_working_dir == True ):
               ' local or turn off the --removeWorkingDir flag')
 else:
     c['removeWorkingDir'] = True
-    c['workingDirectory'] = os.path.join('/tmp', "working")
+    c['workingDirectory'] = os.path.join('/scratch', "working")
 
 if args.participant_label:
     print ("#### Running C-PAC on %s"%(args.participant_label))
@@ -182,7 +182,7 @@ st = datetime.datetime.fromtimestamp(ts).strftime('%Y%m%d%H%M%S')
 if not "s3://" in args.output_dir.lower():
     config_file=os.path.join(args.output_dir,"cpac_pipeline_config_%s.yml"%(st))
 else:
-    config_file=os.path.join("/tmp","cpac_pipeline_config_%s.yml"%(st))
+    config_file=os.path.join("/scratch","cpac_pipeline_config_%s.yml"%(st))
 
 with open(config_file, 'w') as f:
     yaml.dump(c, f)
@@ -262,7 +262,7 @@ else:
 if "s3://" not in args.output_dir.lower():
     data_config_file = os.path.join(args.output_dir,data_config_file)
 else:
-    data_config_file = os.path.join("/tmp",data_config_file)
+    data_config_file = os.path.join("/scratch",data_config_file)
 
 with open(data_config_file, 'w') as f:
     yaml.dump(sub_list, f)

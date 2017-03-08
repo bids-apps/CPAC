@@ -199,7 +199,7 @@ This App has the following command line arguments:
 ### To run it in participant level mode (for one participant):
 
     docker run -i --rm \
-        -v /tmp:/tmp \
+        -v /tmp:/scratch \
         -v /Users/filo/data/ds005:/bids_dataset \
         -v /Users/filo/outputs:/outputs \
 		bids/cpac \
@@ -239,7 +239,7 @@ This App has the following command line arguments:
     # random sleep so that jobs dont start at _exactly_ the same time
     sleep $(( $SGE_TASK_ID % 10 ))
 
-    singularity run -B /home/ubuntu:/mnt -B /mnt:/tmp \
+    singularity run -B /home/ubuntu:/mnt -B /mnt:/scratch \
       /home/ubuntu/workspace/container_build/singularity_images/cpac_latest.img \
       --n_cpus 8 --mem 12 \
       --aws_input_creds /mnt/workspace/cluster_files/s3-keys.csv \
@@ -256,8 +256,8 @@ directories inside the container using the `-B from:to` command line argument, w
 When using mapped directories, remember that the paths specified on the command line are in relation to the directory 
 inside the container (e.g. the `to` directory).
 
-2. Unless the `--save_working_dir` flag is set, the C-PAC app will use the `/tmp` directory for intermediary files.
-Since this directory is write protected, a directory from the local filesystem must be mapped to `/tmp` for the
+2. Unless the `--save_working_dir` flag is set, the C-PAC app will use the `/scratch` directory for intermediary files.
+Since this directory is write protected, a directory from the local filesystem must be mapped to `/scratch` for the
 pipeline to run successfully. This directory should be large  enough to hold all of the intermediary files for the
 datasets that are processed in parallel, as a rule of thumb we suggest 3 GB per dataset. Unless the `--save_working_dir`
 flag is set, the working directory will be deleted when the pipeline has completed.
