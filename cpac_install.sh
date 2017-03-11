@@ -909,11 +909,12 @@ function install_cpac {
     cd /tmp
 
     # update this for new C-PAC
-    latest_version=v1.0.1a
+    latest_version=v1.0.1a_disable_log
     cpac_latest=C-PAC-${latest_version##v}
 
-    wget https://github.com/FCP-INDI/C-PAC/archive/${latest_version}.tar.gz
-    tar xzvf ${latest_version}.tar.gz
+    ##wget https://github.com/FCP-INDI/C-PAC/archive/${latest_version}.tar.gz
+    #tar xzvf ${latest_version}.tar.gz
+    git clone -b v1.0.1a_disable_log https://github.com/FCP-INDI/C-PAC.git ${cpac_latest}
     cd ${cpac_latest}
     python setup.py install
     rm -rf /tmp/${cpac_latest}
