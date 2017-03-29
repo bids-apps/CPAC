@@ -209,25 +209,12 @@ This App has the following command line arguments:
 
 #### Running docker container on Linux
 
-1. Get your ip address (e.g., might have to change eth0 to match the name of your network interface.)
-
-```
-    ip=$(ifconfig eth0 | grep inet | awk '$1=="inet" {print $2}')
-
-```
-
-2. Tell xhost to accept connections from the localhost
-
-```
-xhost +
-```
-   
-3. Start the docker container, mapping the X socket (change /Users/filo to a local directory on your computer)
+1. Start the docker container, mapping the X socket (change /Users/filo to a local directory on your computer)
 
 ```
     docker run -i --rm \
         --privileged \
-        -e DISPLAY=$ip:0 \
+        -e DISPLAY=$DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
         -v /tmp:/scratch \
         -v /Users/filo/data/ds005:/bids_dataset \
