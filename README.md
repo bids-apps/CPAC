@@ -205,7 +205,7 @@ This App has the following command line arguments:
 		bids/cpac \
 		/bids_dataset /outputs participant --participant_label 01
 
-### Running the<a id="nipype">GUI</a>(requires mapping your X socket)
+### Running the <a id="GUI">GUI</a> (requires mapping your X socket)
 
 #### Running docker container on Linux
 
