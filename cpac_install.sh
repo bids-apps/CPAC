@@ -909,7 +909,7 @@ function install_cpac {
     cd /tmp
 
     # update this for new C-PAC
-    latest_version=v1.0.1a
+    latest_version=v1.0.2
     cpac_latest=C-PAC-${latest_version##v}
 
     wget https://github.com/FCP-INDI/C-PAC/archive/${latest_version}.tar.gz
