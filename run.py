@@ -95,17 +95,6 @@ parser.add_argument('--bids_validator_config', help='JSON file specifying config
 parser.add_argument('--skip_bids_validator',
                     help='skips bids validation',
                     action='store_true')
-args = parser.parse_args()
-
-if args.bids_validator_config:
-    run("bids-validator --config {config} {bids_dir}".format(
-        config=args.bids_validator_config,
-        bids_dir=args.bids_dir))
-elif args.skip_bids_validator:
-    print('skipping bids-validator...')
-else:
-    run("bids-validator {bids_dir}".format(bids_dir=args.bids_dir))
-
 
 # get the command line arguments
 args = parser.parse_args()
@@ -130,9 +119,17 @@ if not args.output_dir.lower().startswith("s3://") and not os.path.exists(args.o
     print("Error! Could not find {0}".format(args.output_dir))
     sys.exit(0)
 
-# validate input dir
-print("\nRunning BIDS validator")
-run("bids-validator %s" % args.bids_dir)
+# validate input dir (if skip_bids_validator is not set)
+if args.bids_validator_config:
+    print("\nRunning BIDS validator")
+    run("bids-validator --config {config} {bids_dir}".format(
+        config=args.bids_validator_config,
+        bids_dir=args.bids_dir))
+elif args.skip_bids_validator:
+    print('skipping bids-validator...')
+else:
+    print("\nRunning BIDS validator")
+    run("bids-validator {bids_dir}".format(bids_dir=args.bids_dir))
 
 # otherwise, if we are running group, participant, or dry run we
 # begin by conforming the configuration
