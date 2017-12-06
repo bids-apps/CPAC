@@ -158,9 +158,9 @@ if args.aws_output_creds:
         raise IOError("Could not find aws credentials {0}".format(args.aws_output_creds))
 
 if args.disable_file_logging is True:
-    c['log_to_file'] = False
+    c['disable_log'] = True
 else:
-    c['log_to_file'] = True
+    c['disable_log'] = False
 
 if args.save_working_dir is True:
     if "s3://" not in args.output_dir.lower():
