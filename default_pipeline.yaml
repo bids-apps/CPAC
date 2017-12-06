@@ -55,6 +55,7 @@ crashLogDirectory :  /tmp
 
 
 # Directory where CPAC should place run logs.
+log_to_file : True
 logDirectory :  /tmp
 
 

@@ -70,6 +70,9 @@ parser.add_argument('--mem_gb', help='Amount of RAM available to the pipeline in
                                      ' if this is specified along with mem_mb, this flag will take precedence.')
 parser.add_argument('--save_working_dir', action='store_true',
                     help='Save the contents of the working directory.', default=False)
+parser.add_argument('--disable_file_logging', action='store_true',
+                    help='Disable file logging, this is useful for clusters that have disabled file locking.',
+                    default=False)
 parser.add_argument('--participant_label', help='The label of the participant'
                                                 ' that should be analyzed. The label '
                                                 'corresponds to sub-<participant_label> from the BIDS spec '
@@ -154,7 +157,12 @@ if args.aws_output_creds:
     else:
         raise IOError("Could not find aws credentials {0}".format(args.aws_output_creds))
 
-if args.save_working_dir is not True:
+if args.disable_file_logging is True:
+    c['log_to_file'] = False
+else:
+    c['log_to_file'] = True
+
+if args.save_working_dir is True:
     if "s3://" not in args.output_dir.lower():
         c['removeWorkingDir'] = False
         c['workingDirectory'] = os.path.join(args.output_dir, "working")
