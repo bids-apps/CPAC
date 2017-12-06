@@ -35,7 +35,7 @@ ubuntu_packages=("cmake" "curl" "git" "graphviz" "graphviz-dev" "gsl-bin" "libca
 
 conda_packages=("pandas" "cython" "numpy==1.11" "scipy" "matplotlib" "networkx" "traits" "pyyaml" "jinja2==2.8" "nose" "ipython" "pip" "wxpython")
 
-pip_packages=("future" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel" "nipype" "patsy" "memory_profiler" "psutil" "configparser" "indi_tools")
+pip_packages=("future" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel" "nipype==0.13.1" "patsy" "memory_profiler" "psutil" "configparser" "indi_tools")
 
 function set_system_deps {
     system_pkgs=''
