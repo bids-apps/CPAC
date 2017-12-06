@@ -90,6 +90,22 @@ parser.add_argument('--participant_ndx', help='The index of the participant'
                     default=None)
 parser.add_argument('-v', '--version', action='version',
                     version='C-PAC BIDS-App version {}'.format(__version__))
+parser.add_argument('--bids_validator_config', help='JSON file specifying configuration of '
+                    'bids-validator: See https://github.com/INCF/bids-validator for more info')
+parser.add_argument('--skip_bids_validator',
+                    help='skips bids validation',
+                    action='store_true')
+args = parser.parse_args()
+
+if args.bids_validator_config:
+    run("bids-validator --config {config} {bids_dir}".format(
+        config=args.bids_validator_config,
+        bids_dir=args.bids_dir))
+elif args.skip_bids_validator:
+    print('skipping bids-validator...')
+else:
+    run("bids-validator {bids_dir}".format(bids_dir=args.bids_dir))
+
 
 # get the command line arguments
 args = parser.parse_args()
