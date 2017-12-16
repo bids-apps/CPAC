@@ -33,7 +33,7 @@ RUN npm install -g bids-validator
 # install FSL
 # and remove big atlases we do not use
 RUN wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list && \
-            apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9 && \
+            apt-key adv --recv-keys --keyserver hkp://pool.sks-keyservers.net:80 0xA5D32F012649A5A9 && \
             apt-get update && \
             apt-get install -y fsl-5.0-core fsl-5.0-doc fsl-atlases fslview && \
             apt-get autoclean -y && \
