@@ -1,4 +1,4 @@
-FROM neurodebian:trusty
+FROM neurodebian:trusty-non-free
 MAINTAINER John Pellman <john.pellman@childmind.org>
 
 #RUN wget -O cpac_install.sh \
