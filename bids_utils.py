@@ -3,68 +3,66 @@ import yaml
 import json
 
 
-def bids_decode_fname(file_path, dbg=False):
+def bids_decode_filename(file_path, dbg=False):
     import re
 
     f_dict = {}
 
-    fname = os.path.basename(file_path)
+    filename = os.path.basename(file_path)
 
     # first lets make sure that we know how to handle the file
-    if 'nii' not in fname.lower() and 'json' not in fname.lower():
-        raise IOError("File (%s) does not appear to be" % (fname) +
+    if 'nii' not in filename.lower() and 'json' not in filename.lower():
+        raise IOError("File {} does not appear to be".format(filename) +
                       "a nifti or json file")
 
     if dbg:
-        print "parsing %s" % (file_path)
+        print("parsing {}".format(file_path))
 
     # first figure out if there is a site directory level, this isn't
     # specified in BIDS currently, but hopefully will be in the future
-    file_path_vals = os.path.dirname(file_path).split('/')
-    sub = [s for s in file_path_vals if 'sub-' in s]
+    file_path_values = os.path.dirname(file_path).split('/')
+    sub = [s for s in file_path_values if 'sub-' in s]
     if dbg:
-        print "found subject %s in %s" % (sub, str(file_path_vals))
+        print("found subject {0} in {1}".format(sub, str(file_path_values)))
 
     if len(sub) > 1:
-        print ("Odd that there is more than one subject directory" +
-              "in (%s), does the filename conform to" % (file_path) +
-            " BIDS format?")
+        print ("Odd that there is more than one subject directory in {}, does the filename conform"
+               " to BIDS format?".format(file_path))
     if sub:
-        sub_ndx = file_path_vals.index(sub[0])
-        if sub_ndx > 0 and file_path_vals[sub_ndx - 1]:
+        sub_ndx = file_path_values.index(sub[0])
+        if sub_ndx > 0 and file_path_values[sub_ndx - 1]:
             if dbg:
-                print "setting site to %s" % (file_path_vals[sub_ndx - 1])
-            f_dict["site"] = file_path_vals[sub_ndx - 1]
+                print "setting site to %s" % (file_path_values[sub_ndx - 1])
+            f_dict["site"] = file_path_values[sub_ndx - 1]
         else:
             f_dict["site"] = "none"
-    elif file_path_vals[-1]:
+    elif file_path_values[-1]:
         if dbg:
-            print ("looking for subject id didn't pan out settling for last"+
-                   "subdir %s" % (str(file_path_vals[-1])))
-        f_dict["site"] = file_path_vals[-1]
+            print("looking for subject id didn't pan out settling for last"
+                  " subdir {}".format(str(file_path_values[-1])))
+        f_dict["site"] = file_path_values[-1]
     else:
         f_dict["site"] = "none"
 
     f_dict["site"] = re.sub('[\s\-\_]+', '', f_dict["site"])
 
-    fname = fname.split(".")[0]
+    filename = filename.split(".")[0]
     # convert the filename string into a dictionary to pull out the other
     # key value pairs
-    for key_val_pair in fname.split("_"):
+    for key_val_pair in filename.split("_"):
         if "-" in key_val_pair:
             chunks = key_val_pair.split("-")
             f_dict[chunks[0]] = "-".join(chunks[1:])
         else:
-            f_dict["scantype"] = key_val_pair.split(".")[0]
+            f_dict["scan_type"] = key_val_pair.split(".")[0]
 
-    if not f_dict["scantype"]:
-        raise ValueError("Filename (%s) does not appear to contain" % (fname) +
-                         " scan type, does it conform to the BIDS format?")
+    if not f_dict["scan_type"]:
+        raise ValueError('Filename ({}) does not appear to contain scan type, '
+                         'does it conform to the BIDS standard?'.format(filename))
 
-    if 'bold' in f_dict["scantype"] and not f_dict["task"]:
-        raise ValueError("Filename (%s) is a BOLD file, but " % (fname) +
-                         "doesn't contain a task, does it conform to the" +
-                         " BIDS format?")
+    if 'bold' in f_dict["scan_type"] and not f_dict["task"]:
+        raise ValueError('Filename ({}) appears to be for a BOLD file, but doesn\'t contain a task,'
+                         ' does it conform to the BIDS standard?'.format(filename))
 
     return f_dict
 
@@ -84,7 +82,7 @@ def bids_retrieve_params(bids_config_dict, f_dict, dbg=False):
       extracted from sidecar json files using the principle of inheritance
       using the bids_parse_configs function
     :param f_dict: Dictionary built from the name of a file in the BIDS
-      format. This is built using the bids_decode_fname by splitting on
+      format. This is built using the bids_decode_filename by splitting on
       "-" and "_" delimeters
     :param dbg: boolean flag that indicates whether or not debug statements
       should be printed, defaults to "False"
@@ -155,7 +153,7 @@ def bids_parse_sidecar(config_dict, dbg=False):
     # initialize 'default' entries, this essentially is a pointer traversal
     # of the dictionary
     t_dict = bids_config_dict
-    for level in ['scantype', 'site', 'sub', 'ses', 'task',
+    for level in ['scan_type', 'site', 'sub', 'ses', 'task',
                   'acq', 'rec', 'run']:
         key = '-'.join([level, 'none'])
         t_dict[key] = {}
@@ -181,7 +179,7 @@ def bids_parse_sidecar(config_dict, dbg=False):
             print "processing %s" % (cp)
 
         # decode the filepath into its various components as defined by  BIDS
-        f_dict = bids_decode_fname(cp)
+        f_dict = bids_decode_filename(cp)
 
         # handling inheritance is a complete pain, we will try to handle it by
         # build the key from the bottom up, starting with the most
@@ -210,7 +208,7 @@ def bids_parse_sidecar(config_dict, dbg=False):
         # e.g. run-1, run-2, ... will all map to run-none if no jsons
         # explicitly define values for those runs
         t_dict = bids_config_dict  # pointer to current dictionary
-        for level in ['scantype', 'site', 'sub', 'ses', 'task', 'acq',
+        for level in ['scan_type', 'site', 'sub', 'ses', 'task', 'acq',
                       'rec', 'run']:
             if level in f_dict:
                 key = "-".join([level, f_dict[level]])
@@ -350,7 +348,7 @@ def bids_gen_cpac_sublist(bids_dir, paths_list, config_dict, creds_path, dbg=Fal
 
         if f.endswith(".nii") or f.endswith(".nii.gz"):
 
-            f_dict = bids_decode_fname(p)
+            f_dict = bids_decode_filename(p)
 
             if config_dict:
                 t_params = bids_retrieve_params(bids_config_dict,
@@ -386,7 +384,7 @@ def bids_gen_cpac_sublist(bids_dir, paths_list, config_dict, creds_path, dbg=Fal
                      "subject_id": subjid,
                      "unique_id": "-".join(["ses", f_dict["ses"]])}
 
-            if "T1w" in f_dict["scantype"]:
+            if "T1w" in f_dict["scan_type"]:
                 if "anat" not in subdict[f_dict["sub"]][f_dict["ses"]]:
                     subdict[f_dict["sub"]][f_dict["ses"]]["anat"] = \
                         task_info
@@ -397,7 +395,7 @@ def bids_gen_cpac_sublist(bids_dir, paths_list, config_dict, creds_path, dbg=Fal
                                                           f_dict["ses"],
                                                           p))
 
-            if "bold" in f_dict["scantype"]:
+            if "bold" in f_dict["scan_type"]:
                 task_key = "-".join(["task", f_dict["task"]])
                 if "run" in f_dict:
                     task_key = "_".join([task_key,

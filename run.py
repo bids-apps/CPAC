@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import os
-import subprocess
 import yaml
 import sys
+import subprocess
 
 import datetime
 import time
@@ -12,30 +12,36 @@ __version__ = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                 'version')).read()
 
 
-def run(command, env={}):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                               shell=True, env=env)
+def run(command, env=None):
+    merged_env = os.environ
+    if env:
+        merged_env.update(env)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, shell=True,
+                               env=merged_env)
     while True:
         line = process.stdout.readline()
-        line = str(line)[:-1]
+        line = line.encode('utf-8')[:-1]
         print(line)
         if line == '' and process.poll() is not None:
             break
+    if process.returncode != 0:
+        raise Exception("Non zero return code: {}".format(process.returncode))
 
 
 parser = argparse.ArgumentParser(description='C-PAC Pipeline Runner')
 parser.add_argument('bids_dir', help='The directory with the input dataset '
                                      'formatted according to the BIDS standard. Use the format'
-                                     ' s3://bucket/path/to/bidsdir to read data directly from an S3 bucket.'
-                                     ' This may require AWS S3 credentials specificied via the'
-                                     ' --aws_input_creds option.')
+                                     ' s3://bucket/path/to/bids_dir to read data directly from an S3 bucket.'
+                                     ' This may require AWS S3 credentials specified via the'
+                                     ' --aws_input_credentials option.')
 parser.add_argument('output_dir', help='The directory where the output files '
                                        'should be stored. If you are running group level analysis '
                                        'this folder should be prepopulated with the results of the '
                                        'participant level analysis. Us the format '
-                                       ' s3://bucket/path/to/bidsdir to write data directly to an S3 bucket.'
-                                       ' This may require AWS S3 credentials specificied via the'
-                                       ' --aws_output_creds option.')
+                                       ' s3://bucket/path/to/bids_dir to write data directly to an S3 bucket.'
+                                       ' This may require AWS S3 credentials specified via the'
+                                       ' --aws_output_credentials option.')
 parser.add_argument('analysis_level', help='Level of the analysis that will '
                                            ' be performed. Multiple participant level analyses can be run '
                                            ' independently (in parallel) using the same output_dir. '
@@ -46,44 +52,43 @@ parser.add_argument('analysis_level', help='Level of the analysis that will '
 parser.add_argument('--pipeline_file', help='Name for the pipeline '
                                             ' configuration file to use',
                     default="/cpac_resources/default_pipeline.yaml")
-parser.add_argument('--data_config_file', help='Yaml file containing the location'
-                                               ' of the data that is to be processed. Can be generated from the CPAC'
+parser.add_argument('--data_config_file', help='YAML file containing paths of the data to be processed. Use the format'
+                                               ' s3://bucket/path/to/data_config_file.yml to read the file directly'
+                                               ' from an S3 bucket. The data_config_file can be generated from the CPAC'
                                                ' gui. This file is not necessary if the data in bids_dir is organized'
-                                               ' according to'
-                                               ' the BIDS format. This enables support for legacy data organization'
-                                               ' and cloud based storage. A bids_dir must still be specified when'
+                                               ' according to the BIDS format. This enables support for legacy data'
+                                               ' organization. A bids_dir must still be specified when'
                                                ' using this option, but its value will be ignored.',
                     default=None)
-parser.add_argument('--aws_input_creds', help='Credentials for reading from S3.'
-                                              ' If not provided and s3 paths are specified in the data config '
-                                              ' we will try to access the bucket anonymously',
+parser.add_argument('--aws_input_credentials', help='Credentials for reading from S3. If not provided and s3 paths are '
+                                                    'specified in the data config we will try to access the bucket '
+                                                    'anonymously',
                     default=None)
-parser.add_argument('--aws_output_creds', help='Credentials for writing to S3.'
-                                               ' If not provided and s3 paths are specified in the output directory'
-                                               ' we will try to access the bucket anonymously',
+parser.add_argument('--aws_output_credentials', help='Credentials for writing to S3. If not provided and s3 paths are '
+                                                     'specified in the output directory we will try to access the '
+                                                     'bucket anonymously',
                     default=None)
-parser.add_argument('--n_cpus', help='Number of execution '
-                                     ' resources available for the pipeline', default="1")
-parser.add_argument('--mem_mb', help='Amount of RAM available to the pipeline in megabytes.'
-                                     ' Included for compatibility with BIDS-Apps standard, but mem_gb is preferred')
-parser.add_argument('--mem_gb', help='Amount of RAM available to the pipeline in gigabytes.'
-                                     ' if this is specified along with mem_mb, this flag will take precedence.')
-parser.add_argument('--save_working_dir', action='store_true',
-                    help='Save the contents of the working directory.', default=False)
-parser.add_argument('--participant_label', help='The label of the participant'
-                                                ' that should be analyzed. The label '
-                                                'corresponds to sub-<participant_label> from the BIDS spec '
-                                                '(so it does not include "sub-"). If this parameter is not '
-                                                'provided all participants should be analyzed. Multiple '
-                                                'participants can be specified with a space separated list. To work'
-                                                ' correctly this should come at the end of the command line',
+parser.add_argument('--n_cpus', help='Number of execution resources available for the pipeline. If not specified, the '
+                                     'value from the config file will be used.')
+parser.add_argument('--mem_mb', help='Amount of RAM available to the pipeline in megabytes. Included for compatibility '
+                                     'with BIDS-Apps standard, but mem_gb is preferred')
+parser.add_argument('--mem_gb', help='Amount of RAM available to the pipeline in gigabytes. Ff this is specified along '
+                                     'with mem_mb, this flag will take precedence.')
+parser.add_argument('--save_working_dir', action='store_true', help='Save the contents of the working directory.',
+                    default=False)
+parser.add_argument('--participant_label', help='The label of the participant to be analyzed. The label corresponds to '
+                                                'sub-<participant_label> from the BIDS spec (so it does not include '
+                                                '"sub-"). If this parameter is not provided all participants should be '
+                                                'analyzed. Multiple participants can be specified with a space '
+                                                'separated list. To work correctly this should come at the end of the '
+                                                'command line',
                     nargs="+")
 parser.add_argument('--participant_ndx', help='The index of the participant'
                                               ' that should be analyzed. This corresponds to the index of the'
                                               ' participant in the data config file. This was added to make it easier'
-                                              ' to accomodate SGE array jobs. Only a single participant will be'
+                                              ' to accommodate SGE array jobs. Only a single participant will be'
                                               ' analyzed. Can be used with participant label, in which case it is the'
-                                              ' index into the list that follows the particpant_label flag.',
+                                              ' index into the list that follows the participant_label flag.',
                     default=None)
 parser.add_argument('-v', '--version', action='version',
                     version='C-PAC BIDS-App version {}'.format(__version__))
@@ -113,13 +118,13 @@ if not args.output_dir.lower().startswith("s3://") and not os.path.exists(args.o
 
 # validate input dir
 print("\nRunning BIDS validator")
-run("bids-validator %s" % args.bids_dir)
+run("bids-validator {}".format(args.bids_dir))
 
 # otherwise, if we are running group, participant, or dry run we
 # begin by conforming the configuration
 c = yaml.load(open(os.path.realpath(args.pipeline_file), 'r'))
 
-# set the parameters using the command line arguements
+# set the parameters using the command line arguments
 # TODO: we will need to check that the directories exist, and
 # make them if they do not
 c['outputDirectory'] = os.path.join(args.output_dir, "output")
@@ -138,8 +143,12 @@ elif args.mem_mb:
 else:
     c['maximumMemoryPerParticipant'] = 6.0
 
-c['maxCoresPerParticipant'] = int(args.n_cpus)
+if args.nu_cpus:
+    c['maxCoresPerParticipant'] = int(args.n_cpus)
+
+# force to only preprocess a single data bundle
 c['numParticipantsAtOnce'] = 1
+
 c['num_ants_threads'] = min(int(args.n_cpus), int(c['num_ants_threads']))
 
 if args.aws_input_creds:
@@ -161,7 +170,7 @@ if args.save_working_dir is not True:
     else:
         print ('Cannot write working directory to S3 bucket.'
                ' Either change the output directory to something'
-               ' local or turn off the --removeWorkingDir flag')
+               ' local or turn off the --save_working_dir flag')
 else:
     c['removeWorkingDir'] = True
     c['workingDirectory'] = os.path.join('/scratch', "working")
@@ -183,14 +192,13 @@ print ("Available threads: {0}".format(c['maxCoresPerParticipant']))
 print ("Number of threads for ANTs: {0}".format(c['num_ants_threads']))
 
 # create a timestamp for writing config files
-ts = time.time()
-st = datetime.datetime.fromtimestamp(ts).strftime('%Y%m%d%H%M%S')
+time_stamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S')
 
 # update config file
 if "s3://" not in args.output_dir.lower():
-    config_file = os.path.join(args.output_dir, "cpac_pipeline_config_{0}.yml".format(st))
+    config_file = os.path.join(args.output_dir, "cpac_pipeline_config_{0}.yml".format(time_stamp))
 else:
-    config_file = os.path.join("/scratch", "cpac_pipeline_config_{0}.yml".format(st))
+    config_file = os.path.join("/scratch", "cpac_pipeline_config_{0}.yml".format(time_stamp))
 
 with open(config_file, 'w') as f:
     yaml.dump(c, f)
@@ -228,7 +236,7 @@ if not args.data_config_file:
         sys.exit(1)
 
     # TODO: once CPAC is updated to use per-scan parameters from subject list,
-    # change the 3rd arguement to the config dict returned from
+    # change the 3rd argument to the config dict returned from
     # collect_bids_files_configs
     sub_list = bids_gen_cpac_sublist(args.bids_dir, file_paths, [], args.aws_input_creds)
 
@@ -258,14 +266,14 @@ if args.participant_ndx:
     if 0 <= int(args.participant_ndx) < len(sub_list):
         # make sure to keep it a list
         sub_list = [sub_list[int(args.participant_ndx)]]
-        data_config_file = "cpac_data_config_pt%s_%s.yml" % (args.participant_ndx, st)
+        data_config_file = "cpac_data_config_pt{0}_{1}.yml".format(args.participant_ndx, time_stamp)
     else:
         print ("Participant ndx {0} is out of bounds [0,{1})".format(int(args.participant_ndx),
                                                                      len(sub_list)))
         sys.exit(1)
 else:
     # write out the data configuration file
-    data_config_file = "cpac_data_config_{0}.yml".format(st)
+    data_config_file = "cpac_data_config_{0}.yml".format(time_stamp)
 
 if "s3://" not in args.output_dir.lower():
     data_config_file = os.path.join(args.output_dir, data_config_file)
