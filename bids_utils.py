@@ -173,7 +173,8 @@ def bids_parse_sidecar(config_dict, dbg=False):
     config_paths = sorted(config_dict.keys(), key=lambda p: len(p.split('/')))
 
     if dbg:
-        print config_paths
+        print "config_paths "+" ".join(config_paths)
+        print config_dict
 
     for cp in config_paths:
 
@@ -198,9 +199,16 @@ def bids_parse_sidecar(config_dict, dbg=False):
             bids_config.update(t_params)
 
         # add in the information from this config file
-        t_config = config_dict[cp][0]
-        if t_config is list:
+        t_config = config_dict[cp]
+        while isinstance(t_config,list):
+            print ("%s contents are in a list?" % cp)
             t_config = t_config[0]
+
+        if dbg:
+            print "updating"
+            print bids_config
+            print t_config
+
         bids_config.update(t_config)
 
         # now put the configuration in the data structure, by first iterating
@@ -306,7 +314,7 @@ def gen_bids_outputs_sublist(base_path, paths_list, key_list, creds_path):
     return sublist
 
 
-def bids_gen_cpac_sublist(bids_dir, paths_list, config_dict, creds_path, dbg=False):
+def bids_gen_cpac_sublist(bids_dir, paths_list, config_dict=None, creds_path="", dbg=False):
     """
     Generates a CPAC formatted subject list from information contained in a
     BIDS formatted set of data.
@@ -340,7 +348,7 @@ def bids_gen_cpac_sublist(bids_dir, paths_list, config_dict, creds_path, dbg=Fal
     # otherwise parse the information in the sidecar json files into a dict
     # we can use to extract data for our nifti files
     if config_dict:
-        bids_config_dict = bids_parse_sidecar(config_dict)
+        bids_config_dict = bids_parse_sidecar(config_dict, dbg)
 
     subdict = {}
 
@@ -424,14 +432,7 @@ def bids_gen_cpac_sublist(bids_dir, paths_list, config_dict, creds_path, dbg=Fal
     sublist = []
     for ksub, sub in subdict.iteritems():
         for kses, ses in sub.iteritems():
-            if "anat" in ses and "rest" in ses:
-                sublist.append(ses)
-            else:
-                print( "%s %s is missing either an anat or rest (or both)" %
-                       (ses["subject_id"],
-                        ses["unique_id"]))
-                if dbg:
-                    print ses
+            sublist.append(ses)
 
     return sublist
 
@@ -485,11 +486,14 @@ def collect_bids_files_configs(bids_dir, aws_input_creds=''):
                                    .lstrip('/')
                                for f in files
                                if 'nii' in f and ('T1w' in f or 'bold' in f)]
-                config_dict.update(
-                    {os.path.join(root.replace(bids_dir, '').lstrip('/'), f):
-                         json.load(open(os.path.join(root, f), 'r'))
-                     for f in files
-                     if f.endswith('json') and ('T1w' in f or 'bold' in f)})
+
+                for f in files:
+                    if f.endswith('json') and ('T1w' in f or 'bold' in f):
+                        file_contents=json.load(open(os.path.join(root, f), 'r'))
+                        while isinstance(file_contents,list):
+                            print ("file (%s) contents are in a list?"%(os.path.join(root, f)))
+                            file_contents=file_contents[0]
+                        config_dict.update({os.path.join(root.replace(bids_dir, '').lstrip('/'), f):file_contents})
 
     if not file_paths and not config_dict:
         raise IOError("Didn't find any files in %s. Please verify that the"
@@ -501,8 +505,9 @@ def collect_bids_files_configs(bids_dir, aws_input_creds=''):
 def test_gen_bids_sublist(bids_dir, test_yml, creds_path, dbg=False):
 
     (img_files, config) = collect_bids_files_configs(bids_dir, creds_path)
-    print("Found %d config files for %d image files" % (len(config),
-                                                        len(img_files)))
+    if dbg:
+        print("Found %d config files for %d image files" % (len(config),
+                                                            len(img_files)))
 
     sublist = bids_gen_cpac_sublist(bids_dir, img_files, config, creds_path, dbg)
 
@@ -546,5 +551,12 @@ if __name__ == '__main__':
         "s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/Peking_3",
         "/Users/cameron.craddock/workspace/git_temp/CPAC/test/"
            "rs_subject_list_pk3_s3.yml",
+        "/Users/cameron.craddock/AWS/ccraddock-fcp-indi-keys2.csv",
+        dbg=False)
+
+    test_gen_bids_sublist(
+        "s3://fcp-indi/data/Projects/CORR/RawDataBIDS/BMB_1",
+        "/Users/cameron.craddock/workspace/git_temp/CPAC/test/"
+           "rs_subject_list_corr_bmb3_s3.yml",
         "/Users/cameron.craddock/AWS/ccraddock-fcp-indi-keys2.csv",
         dbg=False)

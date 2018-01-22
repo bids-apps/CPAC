@@ -1,4 +1,5 @@
 # C-PAC BIDS Application
+[![Build Status](https://travis-ci.org/BIDS-Apps/CPAC.svg?branch=master)](https://travis-ci.org/BIDS-Apps/CPAC)
 
 ## Documentation
 Extensive information can be found in the [C-PAC User Guide](http://fcp-indi.github.com/docs/user/index.html). 
