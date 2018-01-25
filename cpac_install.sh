@@ -507,22 +507,25 @@ function install_fsl {
             mv $FSLDIR/tcl $FSLDIR/5.0/tcl
         # Debian-based distros must use NeuroDebian instead of the installer.
         elif [ $DISTRO == 'UBUNTU' ]; then
-            case ${VERSION} in
-                12.04)
-                    wget -O- http://neuro.debian.net/lists/precise.au.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
-                    ;;
-                14.04)
-                    wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
-                    ;;
-                16.04)
-                    wget -O- http://neuro.debian.net/lists/xenial.au.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
-                    ;;
-                16.10)
-                    wget -O- http://neuro.debian.net/lists/yakkety.au.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
-                    ;;
-                *)
-                    echo "Unknown version ${VERSION}"
-            esac
+            if [ ! -f /etc/apt/sources.list.d/neurodebian.sources.list ];
+            then
+              case ${VERSION} in
+                  12.04)
+                      wget -O- http://neuro.debian.net/lists/precise.au.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+                      ;;
+                  14.04)
+                      wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+                      ;;
+                  16.04)
+                      wget -O- http://neuro.debian.net/lists/xenial.au.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+                      ;;
+                  16.10)
+                      wget -O- http://neuro.debian.net/lists/yakkety.au.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+                      ;;
+                  *)
+                      echo "Unknown version ${VERSION}"
+              esac
+            fi
             apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9
             apt-get update
             apt-get install -y fsl-5.0-core
@@ -607,6 +610,8 @@ function install_afni {
         cd $INIT_DIR
         exit 1
     fi
+
+    # build from source until neurodebian updates 16.04 afni download
     cd /tmp
     if [ $(uname -p) == 'x86_64' ]; then
         AFNI_DOWNLOAD=linux_openmp_64
@@ -621,17 +626,23 @@ function install_afni {
     then
         echo "AFNI Install failed!"
         exit 1
+    else
+      rm ${AFNI_DOWNLOAD}.tgz
     fi
 
     if [ $LOCAL -eq 0 ]
     then
         mv ${AFNI_DOWNLOAD} /opt/afni
+        # link the correct library for 3dSkullstrip
+        ln -s /usr/lib/x86_64-linux-gnu/libgsl.so /usr/lib/x86_64-linux-gnu/libgsl.so.0
         export PATH=/opt/afni:$PATH
         export DYLD_FALLBACK_LIBRARY_PATH=/opt/afni
         echo '# Path to AFNI' >> ~/cpac_env.sh
         echo 'export PATH=/opt/afni:$PATH' >> ~/cpac_env.sh
         echo 'export DYLD_FALLBACK_LIBRARY_PATH=/opt/afni' >> ~/cpac_env.sh
     elif [ $LOCAL -eq 1 ]; then
+        # link the correct library for 3dSkullstrip
+        ln -s /usr/lib/x86_64-linux-gnu/libgsl.so /usr/lib/x86_64-linux-gnu/libgsl.so.0
         mv ${AFNI_DOWNLOAD} ~/afni
         export PATH=~/afni:$PATH
         export DYLD_FALLBACK_LIBRARY_PATH=~/afni
@@ -788,7 +799,7 @@ function install_ants {
                     apt-get -y install ants
                     ;;
                 16.04)
-                    compile_ants
+                    apt-get -y install ants
                     ;;
                 16.10)
                     apt-get -y install ants
