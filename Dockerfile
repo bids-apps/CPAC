@@ -25,7 +25,7 @@ COPY bids_utils.py /code/bids_utils.py
 COPY run.py /code/run.py
 COPY run.sh /code/run.sh
 COPY cpac_templates.tar.gz /cpac_resources/cpac_templates.tar.gz
-RUN chmod +x /code/run.py && cd /cpac_resources \
+RUN chmod +x /code/run.py /code/run.sh && cd /cpac_resources \
     && tar xzvf /cpac_resources/cpac_templates.tar.gz \
     && rm -f /cpac_resources/cpac_templates.tar.gz
 
