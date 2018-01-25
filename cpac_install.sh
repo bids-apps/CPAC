@@ -1,94 +1,12 @@
 #! /bin/bash
 
-# these are packages that are common to centos 5, 6, and 7
-centos_packages=("git" "make" "unzip" "netpbm" "gcc" "python-devel"\
-    "gcc-gfortran" "gcc-c++" "libgfortran" "lapack" "lapack-devel" "blas"\
-    "libcanberra-gtk2" "libXp.x86_64" "mesa-libGLU-9.0.0-4.el7.x86_64"\
-    "gsl-1.15-13.el7.x86_64" "wxBase" "wxGTK" "wxGTK-gl" "wxPython" "graphviz"\
-    "graphviz-devel.x86_64")
-
-# configuration options that are specific to centos 5
-centos5_epel_url="http://dl.fedoraproject.org/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm"
-centos5_epel_rpm="epel-release-5-4.noarch.rpm"
-centos5_packages=("mesa-libGLU-6.5.1-7.11.el5_9.i386" "gsl-1.13-3.el5.x86_64"\
-    "libxml2-devel libpng-1.2.10-17.el5_8.i386")
-
-# configuration options that are specific to centos 6
-centos6_epel_url="http://dl.fedoraproject.org/pub/epel/6/x86_64/e/epel-release-6-8.noarch.rpm"
-centos6_epel_rpm="epel-release-6-8.noarch.rpm"
-centos6_packages=("mesa-libGLU-11.0.7-4.el6.x86_64" "gsl-1.13-1.el6.x86_64"\
-    "libcanberra-gtk2" "libxml2-devel" "libpng-1.2.49-2.el6_7.i686")
-
-# configuration options that are specific to centos 7
-centos7_epel_url="http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm"
-centos7_epel_rpm="epel-release-7-5.noarch.rpm"
-centos7_packages=("mesa-libGLU-9.0.0-4.el7.x86_64" "gsl-1.15-13.el7.x86_64"\
-    "libcanberra-gtk2" "libxml-devel" "libpng12.x86_64")
-
-# are all of the ubuntu packages the same regardless of the version?
-ubuntu_packages=("cmake" "curl" "git" "graphviz" "graphviz-dev" "gsl-bin" "libcanberra-gtk-module" \
-    "libexpat1-dev" "libgiftiio-dev" "libglib2.0-dev" "libglu1-mesa" "libglu1-mesa-dev" \
-    "libgsl0-dev" "libjpeg-progs" "libmotif-dev" "libxml2" "libxml2-dev" "libxext-dev" \
-    "libxft2" "libxft-dev" "libxi-dev" "libxmu-headers" "libxmu-dev" "libxpm-dev" "libxslt1-dev" \
-    "libxp6" "libxp-dev" "make" "mesa-common-dev" "mesa-utils" "netpbm" "pkg-config" \
-    "build-essential" "xvfb" "xauth" "libgl1-mesa-dri" "tcsh" "unzip" "zlib1g-dev" "m4")
-
-conda_packages=("pandas" "cython" "numpy==1.11" "scipy" "matplotlib" "networkx" "traits" "pyyaml" "jinja2==2.8" "nose" "ipython" "pip" "wxpython")
-
-pip_packages=("future" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel" "nipype==0.13.1" "patsy" "memory_profiler" "psutil" "configparser" "indi_tools")
-
-function set_system_deps {
-    system_pkgs=''
-    epel_rpm=''
-    epel_url=''
-
-    if [ $DISTRO == 'CENTOS' ]
-    then
-        # add in the packages that are common to all
-        system_pkgs=${centos_packages[@]}
-
-        yum update -y && yum install -y wget
-
-        # add in the packages that are specific to the redhat-release
-        version=$(rpm -q --queryformat '%{VERSION}' centos-release)
-        case ${version} in
-            5)
-                epel_url=centos5_epel_url
-                epel_rpm=centos5_epel_rpm
-                system_pkgs+=(${centos5_packages})
-                ;;
-            6)
-                epel_url=centos6_epel_url
-                epel_rpm=centos6_epel_rpm
-                system_pkgs+=(${centos6_packages})
-                ;;
-            7)
-                epel_url=centos7_epel_url
-                epel_rpm=centos7_epel_rpm
-                system_pkgs+=(${centos7_packages})
-                ;;
-            *)
-                echo "Unknown version ${version}"
-        esac
-    elif [ $DISTRO == 'UBUNTU' ]
-    then
-        # take care of initing apt-get and installing wget
-        echo "!!!!!! CC"
-        apt-get update && apt-get install -y wget
-        system_pkgs=${ubuntu_packages[@]}
-    else
-        echo "Unknown distribution ${DISTRO}"
-        exit 1
-    fi
-}
-
 # CC - reformatted this to have better control of the output
 function print_usage {
     echo ""
     echo "Usage: cpac_install.sh -[spnalrh]"
     echo "========================================================================="
-    echo "Version: 0.4.0"
-    echo "Author(s): John Pellman, Daniel Clark"
+    echo "Version: 1.0.2"
+    echo "Author(s): John Pellman, Daniel Clark, Cameron Craddock"
     echo "Based off of cpac_install.sh by Daniel Clark."
     echo "Description: Will perform specific operations to install C-PAC"
     echo "  dependencies and C-PAC. Checks for user privileges and performs"
@@ -98,7 +16,7 @@ function print_usage {
     echo "  -s : System-level dependencies only."
     echo "  -p : Python dependencies only"
     echo "  -n : Install specific neuroimaging packages.  Accepts any number of the"
-    echo "       following as arguments: afni, fsl, c3d, ants, cpac"
+    echo "       following as arguments: afni, fsl, c3d, ants, cpac_resources, cpac"
     echo "       will issue warnings if dependencies for these neuroimaging packages"
     echo "       are not fulfilled. If multiple packages are to be specified, they"
     echo "       must be surrounded by quotation marks."
@@ -117,129 +35,110 @@ function print_usage {
     echo ""
 }
 
-function install_system_dependencies {
+##### Define system and Python packages.
 
-    echo "Installing C-PAC system dependencies... [${missing_system_dependencies[@]}][${#missing_system_dependencies[@]}]"
+# these are packages that are common to centos 5, 6, and 7
+centos_packages=("git" "make" "cmake" "bzip2" "unzip" "netpbm" "gcc" "python-devel"\
+    "gcc-gfortran" "gcc-c++" "libgfortran" "lapack" "lapack-devel" "blas"\
+    "libXp.x86_64" "wxBase" "wxGTK" "wxGTK-gl" "graphviz"\
+    "graphviz-devel.x86_64" "zlib-devel" "libxslt-devel")
 
-    if [ ${#missing_system_dependencies[@]} -eq 0 ]
+# configuration options that are specific to centos 5
+centos5_epel_url="http://dl.fedoraproject.org/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm"
+centos5_epel_rpm="epel-release-5-4.noarch.rpm"
+centos5_packages=("mesa-libGLU-6.5.1-7.11.el5_9.i386" "gsl-1.13-3.el5.x86_64"\
+    "libxml2-devel libpng-1.2.10-17.el5_8.i386")
+
+# configuration options that are specific to centos 6
+centos6_epel_url="http://dl.fedoraproject.org/pub/epel/6/x86_64/e/epel-release-6-8.noarch.rpm"
+centos6_epel_rpm="epel-release-6-8.noarch.rpm"
+centos6_packages=("mesa-libGLU-11.0.7-4.el6.x86_64" "gsl-1.13-1.el6.x86_64"\
+    "libcanberra-gtk2" "libxml2-devel" "libpng-1.2.49-2.el6_7.i686")
+
+# configuration options that are specific to centos 7
+centos7_epel_url="http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm"
+centos7_epel_rpm="epel-release-7-5.noarch.rpm"
+centos7_packages=("mesa-libGLU-9.0.0-4.el7.x86_64" "gsl-1.15-13.el7.x86_64"\
+    "libcanberra-gtk2" "libxml2-devel" "libpng12.x86_64")
+
+# are all of the ubuntu packages that are common across different versions of Ubuntu
+ubuntu_packages=("cmake" "git" "graphviz" "graphviz-dev" "gsl-bin" "libcanberra-gtk-module" \
+    "libexpat1-dev" "libgiftiio-dev" "libglib2.0-dev" "libglu1-mesa" "libglu1-mesa-dev" \
+    "libjpeg-progs"  "libxml2" "libxml2-dev" "libxext-dev" \
+    "libxft2" "libxft-dev" "libxi-dev" "libxmu-headers" "libxmu-dev" "libxpm-dev" "libxslt1-dev" \
+    "make" "mesa-common-dev" "mesa-utils" "netpbm" "pkg-config" \
+    "build-essential" "xvfb" "xauth" "libgl1-mesa-dri" "tcsh" "unzip" "zlib1g-dev" "m4")
+
+# configuration options that are specific to Ubuntu 12.04
+ubuntu1204_packages=("lesstif2-dev" "libxp6" "libxp-dev" "libgsl0-dev" )
+# configuration options that are specific to Ubuntu 14.04
+ubuntu1404_packages=("libmotif-dev" "libxp6" "libxp-dev" "libgsl0-dev" )
+# configuration options that are specific to Ubuntu 16.04
+ubuntu1604_packages=("libmotif-dev" "xutils-dev" "libtool" "libx11-dev" "x11proto-xext-dev" "x11proto-print-dev" "dh-autoreconf" "libxext-dev" "libgsl-dev" )
+# configuration options that are specific to Ubuntu 16.10
+ubuntu1610_packages=("libmotif-dev" "xutils-dev" "libtool" "libx11-dev" "x11proto-xext-dev" "x11proto-print-dev" "dh-autoreconf" "libxext-dev" "libgsl-dev")
+
+conda_packages=("pandas" "cython" "numpy==1.11" "scipy" "matplotlib" "networkx==1.11" "traits" "pyyaml" "jinja2==2.7.2" "nose" "ipython" "pip" "wxpython")
+
+pip_packages=("future==0.15.2" "prov" "simplejson" "lockfile" "pygraphviz" "nibabel" "nipype" "patsy" "memory_profiler" "psutil" "configparser" "INDI-Tools" "fs==0.5.4" "boto3")
+
+##### Helper functions for installing system dependencies.
+
+function set_system_deps {
+    system_pkgs=''
+    epel_rpm=''
+    epel_url=''
+
+    if [ $DISTRO == 'CENTOS' ]
     then
-        echo "sys packages to be installed ${system_packages[@]}"
-        echo "System dependencies are already installed!"
-        echo "Moving on..."
-        echo "[ $(date) ] : C-PAC system dependencies are already installed, do" \
-            "not need to be re-installed." >> ~/cpac.log
-        return
-    fi
-    if [ $LOCAL -eq 0 ]
+        # add in the packages that are common to all
+        system_pkgs=${centos_packages[@]}
+
+        # add in the packages that are specific to the redhat-release
+        case ${VERSION} in
+            5)
+                epel_url=${centos5_epel_url}
+                epel_rpm=${centos5_epel_rpm}
+                system_pkgs+=(${centos5_packages[@]})
+                ;;
+            6)
+                epel_url=${centos6_epel_url}
+                epel_rpm=${centos6_epel_rpm}
+                system_pkgs+=(${centos6_packages[@]})
+                ;;
+            7)
+                epel_url=${centos7_epel_url}
+                epel_rpm=${centos7_epel_rpm}
+                system_pkgs+=(${centos7_packages[@]})
+                ;;
+            *)
+                echo "Unknown version ${VERSION}"
+        esac
+    elif [ $DISTRO == 'UBUNTU' ]
     then
-        system_dependencies_installed=1
-        if [ $DISTRO == 'CENTOS' ]
-        then
-            version=$(rpm -q --queryformat '%{VERSION}' centos-release)
+        # add in the packages that are common to all
+        system_pkgs=${ubuntu_packages[@]}
 
-            # update the repositories
-            #yum update -y
-            cd /tmp && wget ${epel_url} && rpm -Uvh ${epel_rpm}
-
-            yum install -y ${missing_system_dependencies[@]} 
-            if [ $? -ne 0 ]
-            then
-                system_dependencies_installed=0
-                echo "[ $(date) ] yum failed to install packages: ${missing_system_dependencies[@]}"
-                echo "[ $(date) ] yum failed to install packages: ${missing_system_dependencies[@]}" \
-                    >> ~/cpac.log
-            else	
-                echo "[ $(date) ] : yum Installed C-PAC system dependency"\
-                    "${missing_system_dependencies[@]}"
-                echo "[ $(date) ] : yum Installed C-PAC system dependency"
-                    "${missing_system_dependencies[@]}" \
-                    >> ~/cpac.log
-            fi
-            #for p in ${missing_system_dependencies[@]}
-            #do
-                #echo "[ $(date) ] : Installing C-PAC system dependency $p"
-                #yum install -y ${p}
-                #if [ $? -ne 0 ]
-                #then
-                    #system_dependencies_installed=0
-                    #echo "failed to install package: ${p}"
-                    #echo "[ $(date) ] : Failed to install C-PAC system dependency $p" \
-                        #>> ~/cpac.log
-		#else
-                    #echo "[ $(date) ] : Installed C-PAC system dependency $p"
-                    #echo "[ $(date) ] : Installed C-PAC system dependency $p" \
-                        #>> ~/cpac.log
-                #fi
-            #done
-        elif [ $DISTRO == 'UBUNTU' ]
-        then
-            #apt-get update
-            #apt-get upgrade -y
-
-            apt-get install -y ${missing_system_dependencies[@]} 
-            if [ $? -ne 0 ]
-            then
-                system_dependencies_installed=0
-                echo "[ $(date) ] apt-get failed to install packages: ${missing_system_dependencies[@]}"
-                echo "[ $(date) ] apt-get failed to install packages: ${missing_system_dependencies[@]}" \
-                    >> ~/cpac.log
-            else	
-                echo "[ $(date) ] : apt-get Installed C-PAC system dependency"\
-                    "${missing_system_dependencies[@]}"
-                echo "[ $(date) ] : apt-get Installed C-PAC system dependency"
-                    "${missing_system_dependencies[@]}" \
-                    >> ~/cpac.log
-            fi
-           # for p in ${missing_system_dependencies[@]}
-           # do
-           #     echo "[ $(date) ] : Installing C-PAC system dependency $p"
-           #     apt-get install -y ${p}
-           #     if [ $? -ne 0 ]
-           #     then
-           #         system_dependencies_installed=0
-           #         echo "failed to install package: ${p}"
-           #         echo "[ $(date) ] : Failed to install C-PAC system dependency $p" \
-           #             >> ~/cpac.log
-	   #     else
-           #         echo "[ $(date) ] : Installed C-PAC system dependency $p" 
-           #         echo "[ $(date) ] : Installed C-PAC system dependency $p" \
-           #             >> ~/cpac.log
-           #     fi
-           # done
-            # finish up
-            apt-get autoclean -y
-            apt-get clean -y
-            apt-get autoremove -y
-        else
-            echo "Linux distribution not recognized.  System-level dependencies cannot" \
-                 "be installed."
-            echo "[ $(date) ] : C-PAC system dependencies could not be installed (Linux" \
-                "distribution not recognized)." >> ~/cpac.log
-            cd $INIT_DIR
-            exit 1
-        fi
-    elif [ $LOCAL -eq 1 ]
-    then
-        echo "System-level dependencies cannot be installed since you do not have"\
-             "root privileges."
-        echo "Re-run this script as root or have your system administrator run it."
-        cd $INIT_DIR
-        echo "[ $(date) ] : C-PAC system dependencies could not be installed (not root)."\
-            >> ~/cpac.log
-        exit 1
+        # add in the packages that are specific to the redhat-release
+        case ${VERSION} in
+    	    12.04)
+                system_pkgs+=(${ubuntu1204_packages[@]})
+                ;;
+            14.04)
+                system_pkgs+=(${ubuntu1404_packages[@]})
+                ;;
+            16.04)
+                system_pkgs+=(${ubuntu1604_packages[@]})
+                ;;
+            16.10)
+                system_pkgs+=(${ubuntu1610_packages[@]})
+                ;;
+            *)
+                echo "Unknown version ${VERSION}"
+	    esac
     else
-        echo "Invalid value for variable 'LOCAL'."
-        echo "This script is unable to determine whether or not you are running it as root."
-        echo "[ $(date) ] : C-PAC system dependencies could not be installed (unable to"\
-            "determine if root)." >> ~/cpac.log
-        cd $INIT_DIR
+        echo "Unknown distribution ${DISTRO}"
         exit 1
-    fi
-    if [ ${system_dependencies_installed} -eq 0 ]
-    then
-        echo "[ $(date) ] : C-PAC system dependencies not fully installed." >> ~/cpac.log
-    else
-        echo "[ $(date) ] : C-PAC system dependencies succesfully installed." >> ~/cpac.log
     fi
 }
 
@@ -256,7 +155,7 @@ function get_missing_system_dependencies()
             if [ $? -ne 0 ]
             then
                 system_dependencies_installed=0
-                ARRAY+=(${package})
+                missing_system_dependencies+=(${package})
                 echo "[ $(date) ] : Missing system dependency ${package}" >> ~/cpac.log
             fi
         done
@@ -275,128 +174,118 @@ function get_missing_system_dependencies()
     else
         echo "[ $(date) ] : Do not know how to check for packages installed on ${DISTRO}" >> ~/cpac.log
     fi
-    echo "missing ${missing_system_dependencies[@]}"
 }
 
-function install_python_dependencies {
-
-    if [ ${python_dependencies_installed} -eq 1 ]
+function compile_libxp {
+    # Compiles libxp- this is necessary for some newer versions of Ubuntu
+    # where the is no Debian package available.
+    git clone git://anongit.freedesktop.org/xorg/lib/libXp
+    cd libXp
+    ./autogen.sh
+    ./configure
+    make
+    make install
+    if [ $? -ne 0 ]
     then
-        echo "[ $(date) ] C-PAC Python dependencies installed!"
-        echo "[ $(date) ] C-PAC Python dependencies installed!" >> ~/cpac.log
+        system_dependencies_installed=0
+        echo "[ $(date) ] libxp failed to compile" | tee -a ~/cpac.log
+    else
+        echo "[ $(date) ] Compiled and installed libxp" | tee -a ~/cpac.log
+    fi
+}
+
+##### Function for installing system dependencies.
+
+function install_system_dependencies {
+    echo "Installing C-PAC system dependencies... [${missing_system_dependencies[@]}][${#missing_system_dependencies[@]}]"
+
+    if [ ${#missing_system_dependencies[@]} -eq 0 ]
+    then
+        echo "sys packages to be installed ${system_packages[@]}"
+        echo "System dependencies are already installed!"
+        echo "Moving on..."
+        echo "[ $(date) ] : C-PAC system dependencies are already installed, do" \
+            "not need to be re-installed." | tee -a ~/cpac.log
         return
     fi
-
-    if [ ${system_dependencies_installed} -ne 1 ]
+    if [ $LOCAL -eq 0 ]
     then
-        echo "Python dependencies cannot be installed unless system-level dependencies are installed first."
-        echo "Have your system administrator install system-level dependencies as root."
-        echo "Exiting now..."
-        echo "[ $(date) ] : Python dependencies could not be installed (system-level" \
-            "dependencies not installed." >> ~/cpac.log
+        system_dependencies_installed=1
+        if [ $DISTRO == 'CENTOS' ]
+        then
+
+            yum install -y wget
+            cd /tmp && wget ${epel_url} && rpm -Uvh ${epel_rpm}
+
+            yum install -y ${missing_system_dependencies[@]}
+            # Note: On CentOS 5, yum does not exit with non-zero status if a package fails to download.
+            if [ $? -ne 0 ]
+            then
+                system_dependencies_installed=0
+                echo "[ $(date) ] yum failed to install packages: ${missing_system_dependencies[@]}" | tee -a ~/cpac.log
+            else
+                echo "[ $(date) ] : yum Installed C-PAC system dependency"\
+                    "${missing_system_dependencies[@]}" | tee -a ~/cpac.log
+            fi
+        elif [ $DISTRO == 'UBUNTU' ]
+        then
+            apt-get update
+            apt-get install -y wget
+            apt-get install -y ${missing_system_dependencies[@]}
+            aptgetfail=$?
+            # >= Ubuntu 16.04 no longer has libxp in the repos so it must be compiled
+            case ${VERSION} in
+                16.04)
+                    compile_libxp
+                    ;;
+                16.10)
+                    compile_libxp
+                    ;;
+                *)
+                    echo "libxp is installed via apt for Ubuntu ${VERSION}"
+            esac
+            if [ $aptgetfail -ne 0 ]
+            then
+                system_dependencies_installed=0
+                echo "[ $(date) ] apt-get failed to install packages: ${missing_system_dependencies[@]}" | tee -a ~/cpac.log
+            else
+                echo "[ $(date) ] : apt-get Installed C-PAC system dependency"\
+                    "${missing_system_dependencies[@]}" | tee -a ~/cpac.log
+            fi
+            # finish up
+            apt-get autoremove -y
+        else
+            echo "[ $(date) ] : C-PAC system dependencies could not be installed (Linux" \
+                "distribution not recognized)." | tee -a ~/cpac.log
+            cd $INIT_DIR
+            exit 1
+        fi
+    elif [ $LOCAL -eq 1 ]
+    then
+        echo "System-level dependencies cannot be installed since you do not have"\
+             "root privileges."
+        echo "Re-run this script as root or have your system administrator run it."
+        cd $INIT_DIR
+        echo "[ $(date) ] : C-PAC system dependencies could not be installed (not root)."\
+            | tee -a ~/cpac.log
+        exit 1
+    else
+        echo "Invalid value for variable 'LOCAL'."
+        echo "This script is unable to determine whether or not you are running it as root."
+        echo "[ $(date) ] : C-PAC system dependencies could not be installed (unable to"\
+            "determine if root)." | tee -a ~/cpac.log
         cd $INIT_DIR
         exit 1
     fi
-
-    # for now always install miniconda, in the future should only install 
-    # if not there
-    echo "[ $(date) ] Installing miniconda!"
-    echo "[ $(date) ] Installing miniconda!" >> ~/cpac.log
-
-    cd /tmp
-    if [ ! -f Miniconda-3.8.3-Linux-x86_64.sh ]
+    if [ ${system_dependencies_installed} -eq 0 ]
     then
-        wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh
-        if [ $? -ne 0 ]
-        then
-            echo "[ $(date) ] Could not download miniconda installation script!"
-            echo "[ $(date) ] Could not download miniconda installation script!" >> ~/cpac.log
-            return 
-        fi
+        echo "[ $(date) ] : C-PAC system dependencies not fully installed." | tee -a ~/cpac.log
+    else
+        echo "[ $(date) ] : C-PAC system dependencies succesfully installed." | tee -a ~/cpac.log
     fi
-    chmod +x Miniconda-3.8.3-Linux-x86_64.sh
-    if [ $LOCAL -eq 0 ]
-    then
-        ./Miniconda-3.8.3-Linux-x86_64.sh -b -p /usr/local/bin/miniconda
-        if [ $? -ne 0 ]
-        then
-            echo "[ $(date) ] Miniconda installation failed!"
-            echo "[ $(date) ] Miniconda installation failed!" >> ~/cpac.log
-            #return 
-        fi
-        chmod -R 775 /usr/local/bin/miniconda
-        chmod g+s /usr/local/bin/miniconda
-        export PATH=/usr/local/bin/miniconda/bin:${PATH}
-        echo 'export PATH=/usr/local/bin/miniconda/bin:${PATH}' >> ~/cpac_env.sh
-    elif [ $LOCAL -eq 1 ] && [ ! -d ~/miniconda ]
-    then
-        ./Miniconda-3.8.3-Linux-x86_64.sh -b
-        if [ $? -ne 0 ]
-        then
-            echo "[ $(date) ] Miniconda installation failed!"
-            echo "[ $(date) ] Miniconda installation failed!" >> ~/cpac.log
-            return 
-        fi
-        export PATH=~/miniconda/bin:${PATH}
-        echo 'export PATH=~/miniconda/bin:${PATH}' >> ~/cpac_env.sh
-    fi
-
-    # for docker dont install virtualenv
-    #conda create -y -n cpac python
-    #source activate cpac
-    conda install -y ${missing_conda_dependencies[@]}
-    if [ $? -ne 0 ]
-    then
-        echo "[ $(date) ] Conda install ${p} failed!"
-        echo "[ $(date) ] Conda install ${p} failed!" >> ~/cpac.log
-        exit 1 
-    fi
-    conda clean -y -t -i
-        if [ $? -ne 0 ]
-    then
-        echo "[ $(date) ] Conda clean failed!"
-        echo "[ $(date) ] Conda clean failed!" >> ~/cpac.log
-        exit 1
-    fi
-    #for p in ${missing_conda_dependencies[@]}
-    #do
-        #echo "[ $(date) ] Conda install ${p}!"
-        #conda install -y ${p}
-        #if [ $? -ne 0 ]
-        #then
-            #echo "[ $(date) ] Conda install ${p} failed!"
-            #echo "[ $(date) ] Conda install ${p} failed!" >> ~/cpac.log
-            #exit 1 
-        #fi
-    #done
-
-    pip install ${missing_pip_dependencies[@]}
-    if [ $? -ne 0 ]
-    then
-        echo "[ $(date) ] Pip install ${missing_pip_dependencies[@]} failed!"
-        echo "[ $(date) ] Pip install ${p} failed!" >> ~/cpac.log
-        exit 1 
-    fi
-    #for p in ${missing_pip_dependencies[@]}
-    #do
-        #echo "[ $(date) ] Pip install ${p}!"
-        #pip install ${p}
-        #if [ $? -ne 0 ]
-        #then
-            #echo "[ $(date) ] Pip install ${p} failed!"
-            #echo "[ $(date) ] Pip install ${p} failed!" >> ~/cpac.log
-            #exit 1 
-        #fi
-    #done
-
-    #echo 'source activate cpac' >> ~/cpac_env.sh
-    cd /tmp
-    git clone https://github.com/FCP-INDI/INDI-Tools.git
-    cd INDI-Tools/
-    python setup.py install
-    #source deactivate
-    cd $INIT_DIR
 }
+
+##### Helper functions for installing Python dependencies.
 
 function get_missing_python_dependencies {
 
@@ -419,7 +308,7 @@ function get_missing_python_dependencies {
         missing_pip_dependencies=${pip_packages[@]}
         missing_conda_dependencies=${conda_packages[@]}
     else
-        # if we find an enviroment, then enable it
+        # if we find an environment, then enable it
         if [ -d ~/miniconda/envs/cpac ] || [ -d /usr/local/bin/miniconda/envs/cpac ]
         then
             echo "[ $(date) ] : Found C-PAC virtual environment, activating" >> ~/cpac.log
@@ -429,11 +318,10 @@ function get_missing_python_dependencies {
         python_dependencies_installed=1
         for p in ${pip_packages[@]}
         do
-            p=$(echo ${p} | cut -d= -f1)
-
-            if [ ${p} == "indi_tools" ]
+	    p=$(echo ${p} | cut -d= -f1)
+            if [ ${p} == "INDI-tools" ]
             then
-                /usr/local/bin/miniconda/bin/python -c "import indi_aws" 2> /dev/null
+                python -c "import indi_aws" 2> /dev/null
                 if [ $? -ne 0 ]
                 then
                     echo "[ $(date) ] : Python package $p not installed" >> ~/cpac.log
@@ -443,7 +331,7 @@ function get_missing_python_dependencies {
                     echo "[ $(date) ] : Python package $p installed" >> ~/cpac.log
                 fi
             else
-                /usr/local/bin/miniconda/bin/python -c "import ${p}" 2> /dev/null
+                python -c "import ${p}" 2> /dev/null
                 if [ $? -ne 0 ]
                 then
                     echo "[ $(date) ] : Python package $p not installed" >> ~/cpac.log
@@ -457,27 +345,25 @@ function get_missing_python_dependencies {
 
         for p in ${conda_packages[@]}
         do
-
-            p=$(echo ${p} | cut -d= -f1)
-
+	    p=$(echo ${p} | cut -d= -f1)
             if [ ${p} == "wxpython" ]
             then
-                /usr/local/bin/miniconda/bin/python -c "import wx" 2> /dev/null
+                python -c "import wx" 2> /dev/null
                 retval=$?
             elif [ ${p} == "pyyaml" ]
             then
-                /usr/local/bin/miniconda/bin/python -c "import yaml" 2> /dev/null
+                python -c "import yaml" 2> /dev/null
                 retval=$?
             elif [ ${p} == "ipython" ]
             then
-                if [ -f /usr/local/bin/miniconda/bin/ipython ]
+                if [ -f /usr/local/bin/miniconda/envs/cpac/bin/ipython ]
                 then
                     retval=0
                 else
                     retval=1
                 fi
             else
-                /usr/local/bin/miniconda/bin/python -c "import ${p}" 2> /dev/null
+                python -c "import ${p}" 2> /dev/null
                 retval=$?
             fi
             if [ $retval -ne 0 ]
@@ -499,6 +385,89 @@ function get_missing_python_dependencies {
     fi
 }
 
+##### Function for installing Python dependencies.
+
+function install_python_dependencies {
+
+    if [ ${python_dependencies_installed} -eq 1 ]
+    then
+        echo "[ $(date) ] C-PAC Python dependencies installed!" | tee -a ~/cpac.log
+        return
+    fi
+
+    if [ ${system_dependencies_installed} -ne 1 ]
+    then
+        echo "Python dependencies cannot be installed unless system-level dependencies are installed first."
+        echo "Have your system administrator install system-level dependencies as root."
+        echo "Exiting now..."
+        echo "[ $(date) ] : Python dependencies could not be installed (system-level" \
+            "dependencies not installed." >> ~/cpac.log
+        cd $INIT_DIR
+        exit 1
+    fi
+
+    # for now always install miniconda, in the future should only install
+    # if not there
+    echo "[ $(date) ] Installing miniconda!" | tee -a ~/cpac.log
+
+    cd /tmp
+    if [ ! -f Miniconda-3.8.3-Linux-x86_64.sh ]
+    then
+        wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh
+        if [ $? -ne 0 ]
+        then
+            echo "[ $(date) ] Could not download miniconda installation script!" | tee -a ~/cpac.log
+            return
+        fi
+    fi
+    chmod +x Miniconda-3.8.3-Linux-x86_64.sh
+    if [ $LOCAL -eq 0 ]
+    then
+        ./Miniconda-3.8.3-Linux-x86_64.sh -b -p /usr/local/bin/miniconda
+        if [ $? -ne 0 ]
+        then
+            echo "[ $(date) ] Miniconda installation failed!" | tee -a ~/cpac.log
+            #return
+        fi
+        chmod -R 775 /usr/local/bin/miniconda
+        chmod g+s /usr/local/bin/miniconda
+        export PATH=/usr/local/bin/miniconda/bin:${PATH}
+        echo 'export PATH=/usr/local/bin/miniconda/bin:${PATH}' >> ~/cpac_env.sh
+    elif [ $LOCAL -eq 1 ] && [ ! -d ~/miniconda ]
+    then
+        ./Miniconda-3.8.3-Linux-x86_64.sh -b
+        if [ $? -ne 0 ]
+        then
+            echo "[ $(date) ] Miniconda installation failed!" | tee -a ~/cpac.log
+            return
+        fi
+        export PATH=~/miniconda/bin:${PATH}
+        echo 'export PATH=~/miniconda/bin:${PATH}' >> ~/cpac_env.sh
+    fi
+
+    conda create -y -n cpac python
+    source activate cpac
+    conda install -y ${missing_conda_dependencies[@]}
+    if [ $? -ne 0 ]
+    then
+        echo "[ $(date) ] Conda install ${p} failed!" | tee -a ~/cpac.log
+        exit 1
+    fi
+
+    pip install ${missing_pip_dependencies[@]}
+    if [ $? -ne 0 ]
+    then
+        echo "[ $(date) ] Pip install ${missing_pip_dependencies[@]} failed!" | tee -a ~/cpac.log
+        exit 1
+    fi
+
+    echo 'source activate cpac' >> ~/cpac_env.sh
+    source deactivate
+    python_dependencies_installed=1
+    cd $INIT_DIR
+}
+
+
 function install_fsl {
     echo "Installing FSL."
     which fsl &> /dev/null ; if [ $? -eq 0 ]; then
@@ -518,7 +487,7 @@ function install_fsl {
     fi
     if [ $DISTRO == 'CENTOS' ]; then
             cd /tmp
-        wget fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
+            wget fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
     fi
     if [ $LOCAL -eq 0 ]; then
         if [ $DISTRO == 'CENTOS' ]; then
@@ -538,18 +507,31 @@ function install_fsl {
             mv $FSLDIR/tcl $FSLDIR/5.0/tcl
         # Debian-based distros must use NeuroDebian instead of the installer.
         elif [ $DISTRO == 'UBUNTU' ]; then
-            wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list
+            case ${VERSION} in
+                12.04)
+                    wget -O- http://neuro.debian.net/lists/precise.au.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+                    ;;
+                14.04)
+                    wget -O- http://neuro.debian.net/lists/trusty.us-ca.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+                    ;;
+                16.04)
+                    wget -O- http://neuro.debian.net/lists/xenial.au.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+                    ;;
+                16.10)
+                    wget -O- http://neuro.debian.net/lists/yakkety.au.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+                    ;;
+                *)
+                    echo "Unknown version ${VERSION}"
+            esac
             apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9
             apt-get update
-            apt-get install -y fsl-5.0-core fsl-5.0-doc fsl-atlases fslview
+            apt-get install -y fsl-5.0-core
             if [ $? -ne 0 ]
             then
                 echo "FSL Install failed!"
                 exit 1
             fi
-            apt-get autoclean -y
-            apt-get clean -y
-            apt-get autoremove -y
+
         fi
         FSLDIR=/usr/share/fsl/5.0
         . ${FSLDIR}/etc/fslconf/fsl.sh
@@ -591,7 +573,7 @@ function install_fsl {
         then
             echo FSL cannot be installed without root privileges on Ubuntu Linux.
             echo "[ $(date) ] : FSL installation failed - need root privileges" \
-                "on Ubuntu." >> ~/cpac.log 
+                "on Ubuntu." >> ~/cpac.log
             cd $INIT_DIR
             install_cpac_env
             exit 1
@@ -635,16 +617,6 @@ function install_afni {
     wget http://afni.nimh.nih.gov/pub/dist/tgz/${AFNI_DOWNLOAD}.tgz
     tar xfz ${AFNI_DOWNLOAD}.tgz
 
-    #wget http://fcp-indi.s3.amazonaws.com/resources/cc_afni_trusty_openmp_64.tar.gz
-    #tar xfz cc_afni_trusty_openmp_64.tar.gz
-    #rm cc_afni_trusty_openmp_64.tar.gz
-    #AFNI_DOWNLOAD=afni
-
-    #git clone https://github.com/ccraddock/afni.git
-    #cd /tmp/afni/src
-    #cp Makefile.linux_openmp_64_trusty Makefile
-    #make vastness
-
     if [ $? -ne 0 ]
     then
         echo "AFNI Install failed!"
@@ -670,91 +642,6 @@ function install_afni {
         echo Invalid value for variable 'LOCAL'.
         echo This script is unable to determine whether or not you are running it as root.
         echo '[ '$(date)' ] : AFNI could not be installed (unable to determine if root).' >> ~/cpac.log
-        cd $INIT_DIR
-        exit 1
-    fi
-}
-
-function install_ants {
-    echo "Installing ANTS."
-    which ANTS &> /dev/null ; if [ $? -eq 0 ]; then
-        echo ANTS is already installed!
-        echo Moving on...
-        echo '[ '$(date)' ] : ANTS is already installed - does not need to be re-installed.' >> ~/cpac.log
-        return
-    fi
-    if [ ${system_dependencies_installed} -ne 1 ]
-    then
-        echo ANTS cannot be installed unless system-level dependencies are installed first.
-        echo Have your system administrator install system-level dependencies as root.
-        echo Exiting now...
-        echo '[ '$(date)' ] : ANTS installation failed - system-level dependencies are not installed.' >> ~/cpac.log
-        cd $INIT_DIR
-        exit 1
-    fi
-    which c3d &> /dev/null ; if [ $? -ne 0 ]; then
-        echo "ANTS cannot be installed unless c3d is installed first."
-        echo "Install c3d and then try again."
-        echo "Exiting now..."
-        echo '[ '$(date)' ] : ANTS installation failed - C3D is not installed.' >> ~/cpac.log
-        cd $INIT_DIR
-        install_cpac_env
-        exit 1
-    fi
-    cd /tmp
-    git clone https://github.com/stnava/ANTs.git
-    if [ $LOCAL -eq 0 ]; then
-        mkdir /opt/ants
-        cd /opt/ants
-        cmake -c -g /tmp/ANTs
-	# go slow, -j 4 causes seg fault w/ building containers
-        make
-        if [ $? -ne 0 ]
-        then
-            echo "ANTS compile failed."
-            echo "Exiting now..."
-            echo "[ $(date) ] : ANTS installation failed - compile failed." >> ~/cpac.log
-            cd $INIT_DIR
-            exit 1
-        fi
-        ANTSPATH=/opt/ants/bin
-        cp /tmp/ANTs/Scripts/antsIntroduction.sh ${ANTSPATH}
-        cp /tmp/ANTs/Scripts/antsAtroposN4.sh ${ANTSPATH}
-        cp /tmp/ANTs/Scripts/antsBrainExtraction.sh ${ANTSPATH}
-        cp /tmp/ANTs/Scripts/antsCorticalThickness.sh ${ANTSPATH}
-        export ANTSPATH
-        export PATH=/opt/ants/bin:$PATH
-        echo '# Path to ANTS' >> ~/cpac_env.sh
-        echo 'export ANTSPATH=/opt/ants/bin/' >> ~/cpac_env.sh
-        echo 'export PATH=/opt/ants/bin:$PATH' >> ~/cpac_env.sh
-    elif [ $LOCAL -eq 1 ]; then
-        mkdir ~/ants
-        cd ~/ants
-        cmake -c -g /tmp/ANTs
-	# go slow, -j 4 causes seg fault w/ building containers
-        make
-        if [ $? -ne 0 ]
-        then
-            echo "ANTS compile failed."
-            echo "Exiting now..."
-            echo "[ $(date) ] : ANTS installation failed - compile failed." >> ~/cpac.log
-            cd $INIT_DIR
-            exit 1
-        fi
-        ANTSPATH=~/ants/bin
-        cp /tmp/ANTs/Scripts/antsIntroduction.sh ${ANTSPATH}
-        cp /tmp/ANTs/Scripts/antsAtroposN4.sh ${ANTSPATH}
-        cp /tmp/ANTs/Scripts/antsBrainExtraction.sh ${ANTSPATH}
-        cp /tmp/ANTs/Scripts/antsCorticalThickness.sh ${ANTSPATH}
-        export ANTSPATH
-                export PATH=/opt/ants/bin:$PATH
-        echo '# Path to ANTS' >> ~/cpac_env.sh
-        echo 'export ANTSPATH=~/ants/bin/' >> ~/cpac_env.sh
-        echo 'export PATH=~/ants/bin:$PATH' >> ~/cpac_env.sh
-    else
-        echo Invalid value for variable 'LOCAL'.
-        echo This script is unable to determine whether or not you are running it as root.
-        echo '[ '$(date)' ] : ANTS could not be installed (unable to determine if root).' >> ~/cpac.log
         cd $INIT_DIR
         exit 1
     fi
@@ -802,6 +689,119 @@ function install_c3d {
     fi
 }
 
+function compile_ants {
+    cd /tmp
+    git clone https://github.com/stnava/ANTs.git
+    if [ $LOCAL -eq 0 ]; then
+        mkdir /opt/ants
+        cd /opt/ants
+        cmake -c -g /tmp/ANTs
+	# go slow, -j 4 causes seg fault w/ building containers
+        make
+        if [ $? -ne 0 ]
+        then
+            echo "ANTS compile failed."
+            echo "Exiting now..."
+            echo "[ $(date) ] : ANTS installation failed - compile failed." >> ~/cpac.log
+            cd $INIT_DIR
+            exit 1
+        fi
+        ANTSPATH=/opt/ants/bin
+        cp /tmp/ANTs/Scripts/antsIntroduction.sh ${ANTSPATH}
+        cp /tmp/ANTs/Scripts/antsAtroposN4.sh ${ANTSPATH}
+        cp /tmp/ANTs/Scripts/antsBrainExtraction.sh ${ANTSPATH}
+        cp /tmp/ANTs/Scripts/antsCorticalThickness.sh ${ANTSPATH}
+        export ANTSPATH
+        export PATH=/opt/ants/bin:$PATH
+        echo '# Path to ANTS' >> ~/cpac_env.sh
+        echo 'export ANTSPATH=/opt/ants/bin/' >> ~/cpac_env.sh
+        echo 'export PATH=/opt/ants/bin:$PATH' >> ~/cpac_env.sh
+    elif [ $LOCAL -eq 1 ]; then
+        mkdir ~/ants
+        cd ~/ants
+        cmake -c -g /tmp/ANTs
+	# go slow, -j 4 causes seg fault w/ building containers
+        make
+        if [ $? -ne 0 ]
+        then
+            echo "ANTS compile failed."
+            echo "Exiting now..."
+            echo "[ $(date) ] : ANTS installation failed - compile failed." >> ~/cpac.log
+            cd $INIT_DIR
+            exit 1
+        fi
+        ANTSPATH=~/ants/bin
+        cp /tmp/ANTs/Scripts/antsIntroduction.sh ${ANTSPATH}
+        cp /tmp/ANTs/Scripts/antsAtroposN4.sh ${ANTSPATH}
+        cp /tmp/ANTs/Scripts/antsBrainExtraction.sh ${ANTSPATH}
+        cp /tmp/ANTs/Scripts/antsCorticalThickness.sh ${ANTSPATH}
+        export ANTSPATH
+        export PATH=/opt/ants/bin:$PATH
+        echo '# Path to ANTS' >> ~/cpac_env.sh
+        echo 'export ANTSPATH=~/ants/bin/' >> ~/cpac_env.sh
+        echo 'export PATH=~/ants/bin:$PATH' >> ~/cpac_env.sh
+    else
+        echo Invalid value for variable 'LOCAL'.
+        echo This script is unable to determine whether or not you are running it as root.
+        echo '[ '$(date)' ] : ANTS could not be installed (unable to determine if root).' >> ~/cpac.log
+        cd $INIT_DIR
+        exit 1
+    fi
+}
+
+function install_ants {
+    echo "Installing ANTS."
+    which ANTS &> /dev/null ; if [ $? -eq 0 ]; then
+        echo ANTS is already installed!
+        echo Moving on...
+        echo '[ '$(date)' ] : ANTS is already installed - does not need to be re-installed.' >> ~/cpac.log
+        return
+    fi
+    if [ ${system_dependencies_installed} -ne 1 ]
+    then
+        echo ANTS cannot be installed unless system-level dependencies are installed first.
+        echo Have your system administrator install system-level dependencies as root.
+        echo Exiting now...
+        echo '[ '$(date)' ] : ANTS installation failed - system-level dependencies are not installed.' >> ~/cpac.log
+        cd $INIT_DIR
+        exit 1
+    fi
+    which c3d &> /dev/null ; if [ $? -ne 0 ]; then
+        echo "ANTS cannot be installed unless c3d is installed first."
+        echo "Install c3d and then try again."
+        echo "Exiting now..."
+        echo '[ '$(date)' ] : ANTS installation failed - C3D is not installed.' >> ~/cpac.log
+        cd $INIT_DIR
+        install_cpac_env
+        exit 1
+    fi
+    if [ $DISTRO == 'CENTOS' ]; then
+        compile_ants
+    elif [ $DISTRO == 'UBUNTU' ]; then
+        if [ $LOCAL -eq 0 ]; then
+            # ANTS is supported in Neurodebian for every version of Ubuntu except 16.04
+            case ${VERSION} in
+                12.04)
+                    apt-get -y install ants
+                    ;;
+                14.04)
+                    apt-get -y install ants
+                    ;;
+                16.04)
+                    compile_ants
+                    ;;
+                16.10)
+                    apt-get -y install ants
+                    ;;
+                *)
+                    echo "Unknown version ${VERSION}"
+            esac
+        elif [ $LOCAL -eq 1 ]; then
+            compile_ants
+        fi
+    fi
+}
+
 cpac_resources=("$FSLDIR/data/standard/MNI152_T1_2mm_brain_mask_symmetric_dil.nii.gz" \
     "$FSLDIR/data/standard/MNI152_T1_2mm_brain_symmetric.nii.gz" \
     "$FSLDIR/data/standard/MNI152_T1_2mm_symmetric.nii.gz" \
@@ -812,13 +812,26 @@ cpac_resources=("$FSLDIR/data/standard/MNI152_T1_2mm_brain_mask_symmetric_dil.ni
     "$FSLDIR/data/standard/MNI152_T1_3mm_brain_symmetric.nii.gz" \
     "$FSLDIR/data/standard/MNI152_T1_3mm.nii.gz" \
     "$FSLDIR/data/standard/MNI152_T1_3mm_symmetric.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_4mm_brain_mask_dil.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_4mm_brain_mask.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_4mm_brain_mask_symmetric_dil.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_4mm_brain.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_4mm_brain_symmetric.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_4mm.nii.gz" \
+    "$FSLDIR/data/standard/MNI152_T1_4mm_symmetric.nii.gz" \
     "$FSLDIR/data/atlases/HarvardOxford/HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz")
 
 cpac_resdirs=("$FSLDIR/data/standard/tissuepriors/2mm" \
-              "$FSLDIR/data/standard/tissuepriors/3mm")
+              "$FSLDIR/data/standard/tissuepriors/3mm" \
+              "$FSLDIR/data/standard/tissuepriors/4mm")
 
 function install_cpac_resources {
     echo "Installing C-PAC Image Resources."
+     # Make sure FSLDIR is set.
+    if [ ! -z $FSLDIR ]
+    then
+        echo "[ $(date) ] : FSLDIR must be defined for C-PAC image resources to install." >> ~/cpac.log
+    fi
     # Determines if C-PAC image resources are all already installed.
     RES_PRES=1
     for res in ${cpac_resources[@]}
@@ -844,7 +857,6 @@ function install_cpac_resources {
         return
     fi
 
-    #which fsl &> /dev/null ; if [ $? -ne 0 ]; then
     if [ ! -d "$FSLDIR/data" ]
     then
         echo "CPAC templates cannot be copied unless FSL is installed first."
@@ -856,10 +868,11 @@ function install_cpac_resources {
         exit 1
     fi
     cd /tmp
-    wget http://fcon_1000.projects.nitrc.org/indi/cpac_resources.tgz
-    tar xfz cpac_resources.tgz 2> /dev/null
+    wget http://fcon_1000.projects.nitrc.org/indi/cpac_resources.tar.gz
+    tar xfz cpac_resources.tar.gz
     cd cpac_image_resources
     cp -n MNI_3mm/* $FSLDIR/data/standard
+    cp -n MNI_4mm/* $FSLDIR/data/standard
     cp -n symmetric/* $FSLDIR/data/standard
     cp -nr tissuepriors/2mm $FSLDIR/data/standard/tissuepriors
     cp -nr tissuepriors/3mm $FSLDIR/data/standard/tissuepriors
@@ -892,6 +905,7 @@ function install_cpac {
         install_cpac_env
         exit 1
     fi
+    source activate cpac
     if [ ${python_dependencies_installed} -ne 1 ]
     then
         echo CPAC cannot be installed unless Python dependencies are installed first.
@@ -905,21 +919,13 @@ function install_cpac {
         install_cpac_env
         exit 1
     fi
-    #source activate cpac
     cd /tmp
-
-    # update this for new C-PAC
-    latest_version=v1.0.2_disable_log
-    cpac_latest=C-PAC-${latest_version##v}
-
-    ##wget https://github.com/FCP-INDI/C-PAC/archive/${latest_version}.tar.gz
-    #tar xzvf ${latest_version}.tar.gz
-    git clone -b v1.0.2_disable_log https://github.com/FCP-INDI/C-PAC.git ${cpac_latest}
-    cd ${cpac_latest}
+    git clone https://github.com/FCP-INDI/C-PAC.git
+    cd C-PAC
     python setup.py install
-    rm -rf /tmp/${cpac_latest}
-
-    #source deactivate
+    cd /tmp
+    rm -rf /tmp/C-PAC
+    source deactivate
 }
 
 function install_cpac_env {
@@ -932,17 +938,20 @@ function install_cpac_env {
         then
             cat ~/cpac_env.sh >> ~/.bashrc
             rm ~/cpac_env.sh
+            source /etc/bash.bashrc
         elif [ $LOCAL -eq 0 ]
         then
             if [ -f /etc/profile.d/cpac_env.sh ]
             then
-                # Since functions will not re-install already installed 
+                # Since functions will not re-install already installed
                 # software, this should only append
                 # packages that weren't already in cpac_env.sh.
                 cat ~/cpac_env.sh >> /etc/profile.d/cpac_env.sh
                 rm ~/cpac_env.sh
+                source /etc/profile.d/cpac_env.sh
             else
                 mv ~/cpac_env.sh /etc/profile.d/
+                source /etc/profile.d/cpac_env.sh
             fi
         fi
     fi
@@ -950,8 +959,6 @@ function install_cpac_env {
 
 
 ##### MAIN ENTRY POINT
-
-
 
 # Check to see if user has root privileges.  If not, perform local install.
 # CC undid the obfuscation
@@ -970,10 +977,12 @@ fi
 if [ -f /etc/redhat-release ]
 then
     DISTRO=CENTOS
+    VERSION=$(rpm -q --queryformat '%{VERSION}' centos-release)
 elif [ -f /etc/lsb-release ]
 then
     source /etc/lsb-release
     DISTRO=${DISTRIB_ID^^}
+    VERSION=${DISTRIB_RELEASE^^}
 fi
 
 INIT_DIR=$(pwd)
@@ -992,42 +1001,45 @@ then
     exit 1
 fi
 
-# tell the user what we are doing
-if [ ${LOCAL} -eq 1 ]
+if [ -z ${VERSION} ]
 then
-    echo "Installing the C-CPAC ecosystem locally on ${DISTRO} with $@"
-else
-    echo "Installing the C-CPAC ecosystem system-wide on ${DISTRO} with $@"
+    echo "VERSION needs to be set and non-empty. Check that /etc/redhat-release\n"
+    echo "or /etc/lsb-release exist."
+    exit 1
 fi
 
 set_system_deps
 
-# get an accounting of the missing dependencies
-get_missing_system_dependencies
-get_missing_python_dependencies
-
-echo "missing python dependencies"
-echo ${missing_conda_dependencies[@]}
-echo ${missing_pip_dependencies[@]}
-
-
-if [ ${system_dependencies_installed} -eq 1 ]
+if [ $# -ge 1 ] && [ $1 != '-h' ]
 then
-    echo "All required system dependencies are installed."
-elif [ ${LOCAL} -eq 1 ]
-then
-    echo "The following system dependences need to be installed as super"\
-        "user before the C-PAC installation can continue:"
-    for p in ${missing_system_dependencies}
-    do
-        echo "  $p"
-    done
-    exit 1
+    if [ ${LOCAL} -eq 1 ]
+    then
+        echo "Installing the C-PAC ecosystem locally on ${DISTRO} with $@"
+    else
+        echo "Installing the C-PAC ecosystem system-wide on ${DISTRO} with $@"
+    fi
 fi
 
 # CC if user doesn't provide any command line arguments, install everything
 if [ $# -eq 0 ]
 then
+    # get an accounting of the missing dependencies
+    get_missing_system_dependencies
+    get_missing_python_dependencies
+
+    if [ ${system_dependencies_installed} -eq 1 ]
+    then
+        echo "All required system dependencies are installed."
+    elif [ ${LOCAL} -eq 1 ]
+    then
+        echo "The following system dependences need to be installed as super"\
+            "user before the C-PAC installation can continue:"
+        for p in ${missing_system_dependencies}
+        do
+            echo "  $p"
+        done
+        exit 1
+    fi
     if [ ${LOCAL} -eq 0 ]
     then
         install_system_dependencies
@@ -1048,6 +1060,9 @@ then
     install_cpac
     install_cpac_env
 fi
+
+get_missing_system_dependencies
+get_missing_python_dependencies
 
 while getopts ":spn:alrh" opt
 do
@@ -1085,6 +1100,9 @@ do
                         install_cpac_resources
                         install_cpac
                         install_cpac_env
+                        ;;
+                    cpac_resources)
+                        install_cpac_resources
                         ;;
                     *)
                         echo "Invalid neuroimaging suite: $suite"

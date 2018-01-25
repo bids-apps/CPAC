@@ -1,4 +1,4 @@
-FROM neurodebian:trusty-non-free
+FROM neurodebian:xenial-non-free
 MAINTAINER John Pellman <john.pellman@childmind.org>
 
 #RUN wget -O cpac_install.sh \
@@ -14,7 +14,7 @@ ENV FSLBROWSER /etc/alternatives/x-www-browser
 ENV ANTSPATH /opt/ants/bin/
 ENV DYLD_FALLBACK_LIBRARY_PATH /opt/afni
 ENV LD_LIBRARY_PATH /usr/lib/fsl/5.0:${LD_LIBRARY_PATH}
-ENV PATH /code:/opt/c3d/bin:/opt/ants/bin:/opt/afni:${FSLDIR}/bin:/usr/local/bin/miniconda/bin:${PATH}
+ENV PATH /code:/opt/c3d/bin:/opt/ants/bin:/opt/afni:${FSLDIR}/bin:/usr/local/bin/miniconda/envs/cpac/bin:${PATH}
 
 # create scratch directories for singularity
 RUN mkdir /scratch && mkdir /local-scratch && mkdir -p /code && mkdir -p /cpac_resources
@@ -56,28 +56,19 @@ RUN apt-get update && \
     apt-get autoremove -y
 
 # install AFNI
-COPY afni_minimal.tar.gz /tmp/
-
-RUN tar xfz /tmp/afni_minimal.tar.gz && \
-    mv afni_minimal /opt/afni && \
-    rm /tmp/afni_minimal.tar.gz && \
-    export PATH=/opt/afni:$PATH && \
-    export DYLD_FALLBACK_LIBRARY_PATH=/opt/afni && \
+RUN apt-get install -y afni=16.2.07~dfsg.1-5~nd16.04+1 && \
+    export PATH=/usr/lib/afni/bin:$PATH && \
+    export DYLD_FALLBACK_LIBRARY_PATH=/usr/lib/afni/bin && \
     echo '# Path to AFNI' >> ~/cpac_env.sh && \
-    echo 'export PATH=/opt/afni:$PATH' >> ~/cpac_env.sh && \
-    echo 'export DYLD_FALLBACK_LIBRARY_PATH=/opt/afni' >> ~/cpac_env.sh
-
+    echo 'export PATH=/usr/lib/afni/bin:$PATH' >> ~/cpac_env.sh && \
+    echo 'export DYLD_FALLBACK_LIBRARY_PATH=/usr/lib/afni/bin' >> ~/cpac_env.sh
 
 COPY cpac_install.sh /tmp/cpac_install.sh
 
 # install system dependencies
-RUN /tmp/cpac_install.sh -s
-
 # install python dependencies
-RUN /tmp/cpac_install.sh -p
-
 # install CPAC
-RUN /tmp/cpac_install.sh -n cpac
+RUN /tmp/cpac_install.sh -s -p -n cpac
 
 COPY version /code/version
 COPY bids_utils.py /code/bids_utils.py
