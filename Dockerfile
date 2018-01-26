@@ -175,7 +175,11 @@ RUN cd /tmp && \
     cp -nr tissuepriors/3mm $FSLDIR/data/standard/tissuepriors && \
     cp -n HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz $FSLDIR/data/atlases/HarvardOxford
 
-
+# install cpac templates
+COPY cpac_templates.tar.gz /cpac_resources/cpac_templates.tar.gz
+RUN tar xzvf /cpac_resources/cpac_templates.tar.gz && \
+    rm -f /cpac_resources/cpac_templates.tar.gz
+    
 # install cpac
 RUN pip install git+https://github.com/jdkent/C-PAC.git@fix_pylock
 
