@@ -1,5 +1,10 @@
 # CPAC Pipeline Configuration YAML file
-# version 1.0.1
+# Version 1.0.3
+#
+# http://fcp-indi.github.io for more info.
+#
+# Tip: This file can be edited manually with a text editor for quick modifications.
+
 
 # Select False if you intend to run CPAC on a single machine.
 # If set to True, CPAC will attempt to submit jobs through the job scheduler / resource manager selected below.
@@ -55,7 +60,6 @@ crashLogDirectory :  /tmp
 
 
 # Directory where CPAC should place run logs.
-log_to_file : True
 logDirectory :  /tmp
 
 
@@ -81,6 +85,10 @@ runSymbolicLinks :  [0]
 removeWorkingDir :  True
 
 
+# Whether to write log details of the pipeline run to the logging files.
+run_logging :  True
+
+
 # Uses the contents of the Working Directory to regenerate all outputs and their symbolic links.
 # Requires an intact Working Directory from a previous CPAC run.
 reGenerateOutputs :  False
@@ -102,6 +110,7 @@ template_skull_for_anat :  /usr/share/fsl/5.0/data/standard/MNI152_T1_${resoluti
 
 
 # Use either ANTS or FSL (FLIRT and FNIRT) as your anatomical registration method.
+# Options: ['ANTS'] or ['FSL']
 regOption :  ['ANTS']
 
 
@@ -148,27 +157,69 @@ PRIORS_GRAY :  $priors_path/avg152T1_gray_bin.nii.gz
 PRIORS_CSF :  $priors_path/avg152T1_csf_bin.nii.gz
 
 
+# Interpolate voxel time courses so they are sampled at the same time points.
+slice_timing_correction :  [1]
+
+
+# Specify the TR (in seconds) at which images were acquired.
+# Default is None- TR information is then read from scan parameters in the data configuration file, or the image file header if there is no scan information in the data configuration.
+# Note: the selection chosen here applies to all scans of all participants.
+TR :  None
+
+
+# Acquisition strategy for acquiring image slices.
+# Default is None- slice acquisition information is then read from scan parameters in the data configuration file, or the image file header if there is no scan information in the data configuration.
+# Note: the selection here applies to all scans of all participants.
+slice_timing_pattern :  'Use NIFTI Header'
+
+
 # First timepoint to include in analysis.
 # Default is 0 (beginning of timeseries).
+# First timepoint selection in the scan parameters in the data configuration file, if present, will over-ride this selection.
+# Note: the selection here applies to all scans of all participants.
 startIdx :  4
 
 
 # Last timepoint to include in analysis.
 # Default is None or End (end of timeseries).
+# Last timepoint selection in the scan parameters in the data configuration file, if present, will over-ride this selection.
+# Note: the selection here applies to all scans of all participants.
 stopIdx :  None
 
 
-# Specify the TR at which images were acquired.
-# Default is None (TR information is read from image file header)
-TR :  None
+# Perform fieldmap correction using FSL FUGUE, with a single phase difference image, a subtraction of the two phase images from each echo.
+# Default scanner for this method is SIEMENS.
+runEPI_DistCorr :  [0]
 
 
-# Interpolate voxel time courses so they are sampled at the same time points.
-slice_timing_correction :  [1]
+# Since the quality of the distortion heavily relies on the skull-stripping,
+# step, we provide a choice of method (AFNI 3dSkullStrip or FSL BET).
+# Options: ["BET", "3dSkullStrip"]
+fmap_distcorr_skullstrip: ["BET"]
 
 
-# Acquisition strategy for acquiring image slices.
-slice_timing_pattern :  ['Use NIFTI Header']
+# Set the threshold value for the skull-stripping of the magnitude file.
+# Depending on the data, a tighter extraction may be necessary in order to
+# prevent noisy voxels from interfering with preparing the field map.
+# The default value is 0.5.
+fmap_distcorr_frac: [0.5]
+
+
+# Set the Delta-TE value, used for preparing the field map, the time delay between the first and second echo images.
+fmap_distcorr_deltaTE : 2.46
+
+
+# Set the Dwell time for FSL FUGUE. This is the time between scans.
+# The default value is commonly 0.00231s.
+fmap_distcorr_dwell_time : [0.0005]
+
+
+# Set the asymmetric ratio input value for FSL FUGUE.
+fmap_distcorr_dwell_asym_ratio : [0.93902439]
+
+
+# Set the phase-encoding direction. The options are: x, y, z, -x, -y, -z.
+fmap_distcorr_pedir: -y
 
 
 # Run Functional to Anatomical Registration
@@ -271,6 +322,29 @@ nComponents : [5]
 runFristonModel :  [1]
 
 
+# Remove or regress out volumes exhibiting excessive motion.
+# Options: ['De-Spiking'] or ['Scrubbing']
+runMotionSpike :  ['Off']
+
+
+# (Motion Spike De-Noising only) Choose which Framewise Displacement (FD) calculation to apply the threshold to during de-spiking or scrubbing.
+# Options: ['Jenkinson'] or ['Power']
+fdCalc :  ['Jenkinson']
+
+
+# (Motion Spike De-Noising only) Specify the maximum acceptable Framewise Displacement (FD) in millimeters.
+# Any volume exhibiting FD greater than the value will be regressed out or scrubbed.
+spikeThreshold : [0.2]
+
+
+# (Motion Spike De-Noising only) Number of volumes to de-spike or scrub preceding a volume with excessive FD.
+numRemovePrecedingFrames :  1
+
+
+# (Motion Spike De-Noising only) Number of volumes to de-spike or scrub subsequent to a volume with excessive FD.
+numRemoveSubsequentFrames :  2
+
+
 # Correct for the global signal using Median Angle Correction.
 runMedianAngleCorrection :  [0]
 
@@ -280,47 +354,12 @@ targetAngleDeg : [90]
 
 
 # Apply a temporal band-pass filter to functional data.
-runFrequencyFiltering :  [1, 0]
+runFrequencyFiltering :  [1]
 
 
 # Define one or more band-pass filters by clicking the + button.
 nuisanceBandpassFreq : [[0.01, 0.1]]
 
-
-# Remove volumes exhibiting excessive motion.
-runScrubbing :  [0]
-
-
-# Specify the maximum acceptable Framewise Displacement (FD) in millimeters.
-# Any volume exhibiting FD greater than this value will be removed.
-scrubbingThreshold : [0.2]
-
-
-# Number of volumes to remove preceeding a volume with excessive FD.
-numRemovePrecedingFrames :  1
-
-
-# Number of volumes to remove subsequent to a volume with excessive FD.
-numRemoveSubsequentFrames :  2
-
-# Motion Spike De-Noising. Remove or regress out volumes exhibiting
-# excessive motion.
-# Options: ['Off'], ['De-Spiking'], or ['Scrubbing']
-runMotionSpike :  ['Off']
-
-
-# (Motion Spike De-Noising only) Choose which Framewise Displacement (FD)
-# calculation to apply the threshold to during de-spiking or scrubbing.
-# Options: ['Jenkinson'] or ['Power']
-fdCalc: ['Jenkinson']
-
-
-# (Motion Spike De-Noising only) Specify the maximum acceptable Framewise
-# Displacement (FD) in millimeters or in percentage (with a %). Any volume
-# exhibiting FD greater than the value (or within the top percentage of the
-# percent value, if given) will be regressed out or scrubbed.
-# Options: float value like [0.2] or [1.5], or a percent ['5%'] or ['10%']
-spikeThreshold : [0.5]
 
 # Extract the average time series of one or more ROIs/seeds. Must be enabled if you wish to run Seed-based Correlation Analysis.
 runROITimeseries :  [1]
@@ -338,7 +377,6 @@ tsa_roi_paths:
     /cpac_resources/cpac_templates/PNAS_Smith09_rsn10.nii.gz: SpatialReg
     /cpac_resources/cpac_templates/ho_mask_pad.nii.gz: Avg
     /cpac_resources/cpac_templates/rois_3mm.nii.gz: Avg
-
 
 
 # By default, extracted time series are written as both a text file and a 1D file. Additional output formats are as a .csv spreadsheet or a Numpy array.
@@ -422,6 +460,7 @@ degWeightOptions :  [True, True]
 
 
 # Select the type of threshold used when creating the degree centrality adjacency matrix.
+# Options: ['Significance threshold'], ['Sparsity threshold'], or ['Correlation threshold']
 degCorrelationThresholdOption :  ['Sparsity threshold']
 
 
@@ -437,6 +476,7 @@ eigWeightOptions :  [False, True]
 
 
 # Select the type of threshold used when creating the eigenvector centrality adjacency matrix.
+# Options: ['Significance threshold'], ['Sparsity threshold'], or ['Correlation threshold']
 eigCorrelationThresholdOption :  ['Sparsity threshold']
 
 
@@ -452,6 +492,7 @@ lfcdWeightOptions :  [True, True]
 
 
 # Select the type of threshold used when creating the lFCD adjacency matrix.
+# Options: ['Significance threshold'] or ['Correlation threshold']
 lfcdCorrelationThresholdOption :  ['Correlation threshold']
 
 
@@ -484,4 +525,4 @@ numGPAModelsAtOnce :  1
 # Use the + to add FSL model configuration to be run.
 modelConfigs :  []
 
-disable_log : False
+
