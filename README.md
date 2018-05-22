@@ -11,6 +11,12 @@ C-PAC is implemented in Python using the Nipype pipelining [[1](#nipype)] librar
 docker container, when built, is an application for performing participant level analyses. Future releases will include
 group-level analyses, when there is a BIDS standard for handling derivatives and group models.
 
+### A note about versioning
+C-PAC BIDS Apps version tags are composed of the C-PAC version followed by an underscore and then the version of the 
+container. The container version restarts for every new C-PAC version and is a single integer that reflects the 
+modification number of the build. For example ```v1.0.1a_5``` corresponds to the 5th build of the container for C-PAC 
+version v1.0.1a.
+
 ### Usage notes
 
 1. You can either perform a custom processing using a YAML configuration file or use the default processing pipeline. A
@@ -23,7 +29,7 @@ written to S3 using the same format for the output_dir. Credentials for accessin
 command line (using `--aws_input_creds` or `--aws_output_creds`).
 
 3. Non-BIDS organized data can processed using a C-PAC data configuration yaml file. This file can be generated using
-the C-PAC GUI (start the app with the `GUI` argument) or can be created using other means, please refer to [CPAC
+the C-PAC GUI (start the app with the `GUI` argument, also see instructions [below](#GUI)) or can be created using other means, please refer to [CPAC
 documentation](http://fcp-indi.github.io/docs/user/subject_list_config.html) for more information.
 
 4. When the app is run, a data configuration file is written to the working directory. This file can be passed into
@@ -199,6 +205,80 @@ This App has the following command line arguments:
 		bids/cpac \
 		/bids_dataset /outputs participant --participant_label 01
 
+### Running the <a id="GUI">GUI</a> (requires mapping your X socket)
+
+#### Running docker container on Linux
+
+1. Start the docker container, mapping the X socket (change /Users/filo to a local directory on your computer)
+
+```
+    docker run -i --rm \
+        --privileged \
+        -e DISPLAY=$DISPLAY \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v /tmp:/scratch \
+        -v /Users/filo/data/ds005:/bids_dataset \
+        -v /Users/filo/outputs:/outputs \
+        bids/cpac \
+        /bids_dataset /outputs GUI
+```
+
+#### Running docker container on Mac OSX
+
+1. [Install XQuartz](https://www.xquartz.org/)
+
+2. Start XQuartz (from terminal)
+
+```
+    open -a XQuartz
+```
+
+3. Enable XQuartz connections from network clients
+
+XQuartz -> preferences -> security -> "Allow connections from network clients"
+
+4. Get your ip address (e.g., might have to change eth0 to match the name of your network interface.)
+
+```
+    ip=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
+
+```
+
+5. Tell xhost to accept connections from the localhost
+
+```
+xhost + ${ip}
+```
+   
+6. Start the docker container, mapping the X socket (change /Users/filo to a local directory on your computer)
+
+```
+    docker run -i --rm \
+        --privileged \
+        -e DISPLAY=$ip:0 \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v /tmp:/scratch \
+        -v /Users/filo/data/ds005:/bids_dataset \
+        -v /Users/filo/outputs:/outputs \
+		bids/cpac \
+		/bids_dataset /outputs GUI
+``` 
+
+#### Running singularity container on Linux
+
+1. Start the docker container (it just works!, provided you change /Users/filo to a local directory on your computer)
+
+```
+    singularity run \
+        -B /home/ubuntu:/mnt \
+        -B /mnt:/scratch \
+        -B /Users/filo/data/ds005:/bids_dataset \
+        -B /Users/filo/outputs:/outputs \
+        /home/ubuntu/workspace/container_build/singularity_images/cpac_latest.img \
+        /bids_dataset \
+        /outputs\
+        GUI
+``` 
 
 ### To convert the Docker container to a [Singularity](http://singularity.lbl.gov/) container :
 

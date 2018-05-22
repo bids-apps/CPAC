@@ -47,15 +47,16 @@ pipelineName :  analysis
 
 
 # Directory where CPAC should store temporary and intermediate files.
-workingDirectory :  /scratch
+workingDirectory :  /tmp
 
 
 # Directory where CPAC should write crash logs.
-crashLogDirectory :  /scratch
+crashLogDirectory :  /tmp
 
 
 # Directory where CPAC should place run logs.
-logDirectory :  /scratch
+log_to_file : True
+logDirectory :  /tmp
 
 
 # Directory where CPAC should place processed data.
@@ -63,7 +64,7 @@ outputDirectory :  /output
 
 
 # If setting the 'Output Directory' to an S3 bucket, insert the path to your AWS credentials file here.
-awsOutputBucketCredentials :  
+awsOutputBucketCredentials :
 
 
 # Enable server-side 256-AES encryption on data to the S3 bucket
@@ -302,6 +303,24 @@ numRemovePrecedingFrames :  1
 # Number of volumes to remove subsequent to a volume with excessive FD.
 numRemoveSubsequentFrames :  2
 
+# Motion Spike De-Noising. Remove or regress out volumes exhibiting
+# excessive motion.
+# Options: ['Off'], ['De-Spiking'], or ['Scrubbing']
+runMotionSpike :  ['Off']
+
+
+# (Motion Spike De-Noising only) Choose which Framewise Displacement (FD)
+# calculation to apply the threshold to during de-spiking or scrubbing.
+# Options: ['Jenkinson'] or ['Power']
+fdCalc: ['Jenkinson']
+
+
+# (Motion Spike De-Noising only) Specify the maximum acceptable Framewise
+# Displacement (FD) in millimeters or in percentage (with a %). Any volume
+# exhibiting FD greater than the value (or within the top percentage of the
+# percent value, if given) will be regressed out or scrubbed.
+# Options: float value like [0.2] or [1.5], or a percent ['5%'] or ['10%']
+spikeThreshold : [0.5]
 
 # Extract the average time series of one or more ROIs/seeds. Must be enabled if you wish to run Seed-based Correlation Analysis.
 runROITimeseries :  [1]
@@ -465,4 +484,4 @@ numGPAModelsAtOnce :  1
 # Use the + to add FSL model configuration to be run.
 modelConfigs :  []
 
-
+disable_log : False

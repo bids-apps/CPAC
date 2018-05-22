@@ -48,23 +48,23 @@ pipelineName :  analysis
 
 
 # Directory where CPAC should store temporary and intermediate files.
-workingDirectory :  /scratch
+workingDirectory :  /tmp
 
 
 # Directory where CPAC should write crash logs.
-crashLogDirectory :  /scratch
+crashLogDirectory :  /tmp
 
 
 # Directory where CPAC should place run logs.
-logDirectory :  /scratch
+logDirectory :  /tmp
 
 
 # Directory where CPAC should place processed data.
-outputDirectory : /output 
+outputDirectory : /output
 
 
 # If setting the 'Output Directory' to an S3 bucket, insert the path to your AWS credentials file here.
-awsOutputBucketCredentials :  
+awsOutputBucketCredentials :
 
 
 # Enable server-side 256-AES encryption on data to the S3 bucket
@@ -128,32 +128,32 @@ regWithSkull :  [1]
 already_skullstripped :  [0]
 
 
-# Automatically segment anatomical images into white matter, gray matter, and 
+# Automatically segment anatomical images into white matter, gray matter, and
 # CSF based on prior probability maps.
 runSegmentationPreprocessing :  [1]
 
 
 # Full path to a directory containing binarized prior probability maps.
 # These maps are included as part of the 'Image Resource Files' package
-# available on the Install page of the User Guide. It is not necessary 
+# available on the Install page of the User Guide. It is not necessary
 # to change this path unless you intend to use non-standard priors.
 priors_path :  /usr/share/fsl/5.0/data/standard/tissuepriors/2mm
 
 
 # Full path to a binarized White Matter prior probability map.
-# It is not necessary to change this path unless you intend to use 
+# It is not necessary to change this path unless you intend to use
 # non-standard priors.
 PRIORS_WHITE :  $priors_path/avg152T1_white_bin.nii.gz
 
 
 # Full path to a binarized Gray Matter prior probability map.
-# It is not necessary to change this path unless you intend to use 
+# It is not necessary to change this path unless you intend to use
 # non-standard priors.
 PRIORS_GRAY :  $priors_path/avg152T1_gray_bin.nii.gz
 
 
 # Full path to a binarized CSF prior probability map.
-# It is not necessary to change this path unless you intend to 
+# It is not necessary to change this path unless you intend to
 # use non-standard priors.
 PRIORS_CSF :  $priors_path/avg152T1_csf_bin.nii.gz
 
@@ -189,15 +189,15 @@ runBBReg :  [1]
 boundaryBasedRegistrationSchedule :  /usr/share/fsl/5.0/etc/flirtsch/bbr.sch
 
 
-# Choose whether to use the mean of the functional/EPI as the input to 
-# functional-to-anatomical registration or one of the volumes from the 
+# Choose whether to use the mean of the functional/EPI as the input to
+# functional-to-anatomical registration or one of the volumes from the
 # functional 4D timeseries that you choose.
 func_reg_input :  ['Mean Functional']
 
 
-# Only for when 'Use as Functional-to-Anatomical Registration Input' is 
-# set to 'Selected Functional Volume'. Input the index of which volume 
-# from the functional 4D timeseries input file you wish to use as the 
+# Only for when 'Use as Functional-to-Anatomical Registration Input' is
+# set to 'Selected Functional Volume'. Input the index of which volume
+# from the functional 4D timeseries input file you wish to use as the
 # input for functional-to-anatomical registration.
 func_reg_input_volume :  0
 
@@ -311,6 +311,24 @@ numRemovePrecedingFrames :  1
 # Number of volumes to remove subsequent to a volume with excessive FD.
 numRemoveSubsequentFrames :  2
 
+# Motion Spike De-Noising. Remove or regress out volumes exhibiting
+# excessive motion.
+# Options: ['Off'], ['De-Spiking'], or ['Scrubbing']
+runMotionSpike :  ['Off']
+
+
+# (Motion Spike De-Noising only) Choose which Framewise Displacement (FD)
+# calculation to apply the threshold to during de-spiking or scrubbing.
+# Options: ['Jenkinson'] or ['Power']
+fdCalc: ['Jenkinson']
+
+
+# (Motion Spike De-Noising only) Specify the maximum acceptable Framewise
+# Displacement (FD) in millimeters or in percentage (with a %). Any volume
+# exhibiting FD greater than the value (or within the top percentage of the
+# percent value, if given) will be regressed out or scrubbed.
+# Options: float value like [0.2] or [1.5], or a percent ['5%'] or ['10%']
+spikeThreshold : [0.5]
 
 # Extract the average time series of one or more ROIs/seeds. Must be enabled if you wish to run Seed-based Correlation Analysis.
 runROITimeseries :  [1]
@@ -474,3 +492,5 @@ numGPAModelsAtOnce :  1
 
 # Use the + to add FSL model configuration to be run.
 modelConfigs :  []
+
+disable_log : False
