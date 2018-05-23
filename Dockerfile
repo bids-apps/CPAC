@@ -181,7 +181,7 @@ RUN tar xzvf /cpac_resources/cpac_templates.tar.gz && \
     rm -f /cpac_resources/cpac_templates.tar.gz
     
 # install cpac
-RUN pip install git+https://github.com/jdkent/C-PAC.git@fix_pylock
+RUN pip install git+https://github.com/FCP-INDI/C-PAC.git@v1.1.0
 
 
 # clean up
