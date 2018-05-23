@@ -1,5 +1,10 @@
 # CPAC Pipeline Configuration YAML file
-# version 1.0.1
+# Version 1.1.0
+#
+# http://fcp-indi.github.io for more info.
+#
+# Tip: This file can be edited manually with a text editor for quick modifications.
+
 
 # Select False if you intend to run CPAC on a single machine.
 # If set to True, CPAC will attempt to submit jobs through the job scheduler / resource manager selected below.
@@ -69,6 +74,18 @@ awsOutputBucketCredentials :
 
 # Enable server-side 256-AES encryption on data to the S3 bucket
 s3Encryption :  [0]
+
+
+# Include extra versions and intermediate steps of functional preprocessing in the output directory.
+write_func_outputs :  [0]
+
+
+# Include extra outputs in the output directory that may be of interest when more information is needed.
+write_debugging_outputs :  [0]
+
+
+# Generate quality control pages containing preprocessing and derivative outputs.
+generateQualityControlImages :  [1]
 
 
 # Create a user-friendly, well organized version of the output directory.
@@ -467,14 +484,28 @@ lfcdCorrelationThreshold :  0.6
 memoryAllocatedForDegreeCentrality :  1.0
 
 
+# Smooth the derivative outputs.
+# On - Run smoothing and output only the smoothed outputs.
+# On/Off - Run smoothing and output both the smoothed and non-smoothed outputs.
+# Off - Don't run smoothing.
+run_smoothing :  [1]
+
+
 # Full Width at Half Maximum of the Gaussian kernel used during spatial smoothing.
 # Can be a single value or multiple values separated by commas.
 # Note that spatial smoothing is run as the last step in the individual-level analysis pipeline, such that all derivatives are output both smoothed and unsmoothed.
 fwhm : [6]
 
 
-# Decides format of outputs. Off will produce non-z-scored outputs, On will produce z-scores of outputs and non-z-scored outputs.
-runZScoring :  [0]
+# Choose whether to smooth outputs before or after z-scoring.
+smoothing_order :  ['Before']
+
+
+# z-score standardize the derivatives. This is required for group-level analysis.
+# On - Run z-scoring and output only the z-scored outputs.
+# On/Off - Run z-scoring and output both the z-scored and raw score versions of the outputs.
+# Off - Don't run z-scoring.
+runZScoring :  [1]
 
 
 # This number depends on computing resources.
