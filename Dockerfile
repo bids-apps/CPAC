@@ -175,10 +175,10 @@ RUN cd /tmp && \
 
 # install cpac templates
 COPY cpac_templates.tar.gz /cpac_resources/cpac_templates.tar.gz
-RUN cd cpac_resources && \
-    tar xzvf /cpac_resources/cpac_templates.tar.gz && \
+RUN tar xzvf /cpac_resources/cpac_templates.tar.gz -C /cpac_resources && \
+
     rm -f /cpac_resources/cpac_templates.tar.gz
-    
+
 # install cpac
 RUN pip install git+https://github.com/FCP-INDI/C-PAC.git@v1.1.0
 
