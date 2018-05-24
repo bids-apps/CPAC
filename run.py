@@ -50,7 +50,6 @@ def run(command, env={}):
         if line == '' and process.poll() is not None:
             break
 
-
 parser = argparse.ArgumentParser(description='C-PAC Pipeline Runner')
 parser.add_argument('bids_dir', help='The directory with the input dataset '
                                      'formatted according to the BIDS standard. '
