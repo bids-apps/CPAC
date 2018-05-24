@@ -454,7 +454,7 @@ def collect_bids_files_configs(bids_dir, aws_input_creds=''):
 
         if aws_input_creds:
             if not os.path.isfile(aws_input_creds):
-                raise IOError("Could not filed aws_input_creds (%s)" %
+                raise IOError("Could not find aws_input_creds (%s)" %
                               (aws_input_creds))
 
         from indi_aws import fetch_creds

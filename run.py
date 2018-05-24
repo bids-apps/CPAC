@@ -11,6 +11,34 @@ import time
 __version__ = open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                 'version')).read()
 
+def load_yaml_config(config_filename, aws_input_creds):
+
+    if config_filename.lower().startswith("s3://"):
+        # s3 paths begin with s3://bucket/
+        bucket_name = config_filename.split('/')[2]
+        s3_prefix = '/'.join(config_filename.split('/')[:3])
+        prefix = config_filename.replace(s3_prefix, '').lstrip('/')
+
+        if aws_input_creds:
+            if not os.path.isfile(aws_input_creds):
+                raise IOError("Could not find aws_input_creds (%s)" %
+                              (aws_input_creds))
+
+        from indi_aws import fetch_creds
+        bucket = fetch_creds.return_bucket(aws_input_creds, bucket_name)
+
+        bucket.download_file(prefix, '/tmp/'+os.path.basename(config_filename))
+
+        config_filename = '/tmp/'+os.path.basename(config_filename)
+
+    config_filename = os.path.realpath(config_filename)
+    if os.path.isfile(config_filename):
+        with open(config_filename,'r') as infd:
+            config_data = yaml.load(infd)
+
+    return(config_data)
+
+
 
 def run(command, env={}):
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -22,10 +50,10 @@ def run(command, env={}):
         if line == '' and process.poll() is not None:
             break
 
-
 parser = argparse.ArgumentParser(description='C-PAC Pipeline Runner')
 parser.add_argument('bids_dir', help='The directory with the input dataset '
-                                     'formatted according to the BIDS standard. Use the format'
+                                     'formatted according to the BIDS standard. '
+                                     'Use the format'
                                      ' s3://bucket/path/to/bidsdir to read data directly from an S3 bucket.'
                                      ' This may require AWS S3 credentials specificied via the'
                                      ' --aws_input_creds option.')
@@ -44,7 +72,11 @@ parser.add_argument('analysis_level', help='Level of the analysis that will '
                                            ' not execute the pipeline.',
                     choices=['participant', 'group', 'test_config', 'GUI'])
 parser.add_argument('--pipeline_file', help='Name for the pipeline '
-                                            ' configuration file to use',
+                                            ' configuration file to use. '
+                                            'Use the format'
+                                            ' s3://bucket/path/to/pipeline_file to read data directly from an S3 bucket.'
+                                            ' This may require AWS S3 credentials specificied via the'
+                                            ' --aws_input_creds option.',
                     default="/cpac_resources/default_pipeline.yaml")
 parser.add_argument('--data_config_file', help='Yaml file containing the location'
                                                ' of the data that is to be processed. Can be generated from the CPAC'
@@ -52,15 +84,23 @@ parser.add_argument('--data_config_file', help='Yaml file containing the locatio
                                                ' according to'
                                                ' the BIDS format. This enables support for legacy data organization'
                                                ' and cloud based storage. A bids_dir must still be specified when'
-                                               ' using this option, but its value will be ignored.',
+                                               ' using this option, but its value will be ignored.'
+                                               ' Use the format'
+                                               ' s3://bucket/path/to/data_config_file to read data directly from an S3 bucket.'
+                                               ' This may require AWS S3 credentials specificied via the'
+                                               ' --aws_input_creds option.',
                     default=None)
 parser.add_argument('--aws_input_creds', help='Credentials for reading from S3.'
-                                              ' If not provided and s3 paths are specified in the data config '
-                                              ' we will try to access the bucket anonymously',
+                                              ' If not provided and s3 paths are specified in the data config'
+                                              ' we will try to access the bucket anonymously'
+                                              ' use the string "env" to indicate that input credentials should'
+                                              ' read from the environment. (E.g. when using AWS iam roles).',
                     default=None)
 parser.add_argument('--aws_output_creds', help='Credentials for writing to S3.'
                                                ' If not provided and s3 paths are specified in the output directory'
-                                               ' we will try to access the bucket anonymously',
+                                               ' we will try to access the bucket anonymously'
+                                              ' use the string "env" to indicate that output credentials should'
+                                              ' read from the environment. (E.g. when using AWS iam roles).',
                     default=None)
 parser.add_argument('--n_cpus', help='Number of execution '
                                      ' resources available for the pipeline', default="1")
@@ -86,7 +126,9 @@ parser.add_argument('--participant_ndx', help='The index of the participant'
                                               ' participant in the data config file. This was added to make it easier'
                                               ' to accomodate SGE array jobs. Only a single participant will be'
                                               ' analyzed. Can be used with participant label, in which case it is the'
-                                              ' index into the list that follows the particpant_label flag.',
+                                              ' index into the list that follows the particpant_label flag.'
+                                              ' Use the value "-1" to indicate that the participant index should'
+                                              ' be read from the AWS_BATCH_JOB_ARRAY_INDEX environment variable.',
                     default=None)
 parser.add_argument('-v', '--version', action='version',
                     version='C-PAC BIDS-App version {}'.format(__version__))
@@ -131,9 +173,27 @@ else:
     print("\nRunning BIDS validator")
     run("bids-validator {bids_dir}".format(bids_dir=args.bids_dir))
 
+# get the aws_input_credentials, if any are specified
+if args.aws_input_creds:
+    if args.aws_input_creds is "env":
+        import urllib2
+        aws_creds_address = "169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
+        aws_creds = urllib2.urlopen(aws_creds_address).read()
+
+        args.aws_input_creds = "/tmp/aws_input_creds.csv"
+
+        with open(args.aws_input_creds) as ofd:
+            for key, vname in [("AccessKeyId","AWSAcessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
+                ofd.write("{0}={1}".format(vname,aws_creds[key])) 
+
+    if os.path.isfile(args.aws_input_creds):
+        c['awsCredentialsFile'] = args.aws_input_creds
+    else:
+        raise IOError("Could not find aws credentials {0}".format(args.aws_input_creds))
+
 # otherwise, if we are running group, participant, or dry run we
 # begin by conforming the configuration
-c = yaml.load(open(os.path.realpath(args.pipeline_file), 'r'))
+c = load_yaml_config(args.pipeline_file, args.aws_input_creds)
 
 # set the parameters using the command line arguements
 # TODO: we will need to check that the directories exist, and
@@ -158,13 +218,19 @@ c['maxCoresPerParticipant'] = int(args.n_cpus)
 c['numParticipantsAtOnce'] = 1
 c['num_ants_threads'] = min(int(args.n_cpus), int(c['num_ants_threads']))
 
-if args.aws_input_creds:
-    if os.path.isfile(args.aws_input_creds):
-        c['awsCredentialsFile'] = args.aws_input_creds
-    else:
-        raise IOError("Could not find aws credentials {0}".format(args.aws_input_creds))
-
 if args.aws_output_creds:
+
+    if args.aws_output_creds is "env":
+        import urllib2
+        aws_creds_address = "169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
+        aws_creds = urllib2.urlopen(aws_creds_address).read()
+
+        args.aws_output_creds = "/tmp/aws_output_creds.csv"
+
+        with open(args.aws_output_creds) as ofd:
+            for key, vname in [("AccessKeyId","AWSAcessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
+                ofd.write("{0}={1}".format(vname,aws_creds[key])) 
+
     if os.path.isfile(args.aws_output_creds):
         c['awsOutputBucketCredentials'] = args.aws_output_creds
     else:
@@ -259,13 +325,13 @@ if not args.data_config_file:
 
 else:
     # load the file as a check to make sure it is available and readable
-    sub_list = yaml.load(open(os.path.realpath(args.data_config_file), 'r'))
+    sub_list = load_yaml_config(args.data_config_file, args.aws_input_creds)
 
     if args.participant_label:
         t_sub_list = []
         for sub_dict in sub_list:
-            if sub_dict["participant_id"] in args.participant_label or \
-                            sub_dict["participant_id"].replace("sub-", "") in args.participant_label:
+            if sub_dict["subject_id"] in args.participant_label or \
+                            sub_dict["subject_id"].replace("sub-", "") in args.participant_label:
                 t_sub_list.append(sub_dict)
 
         sub_list = t_sub_list
@@ -276,8 +342,13 @@ else:
             sys.exit(1)
 
 if args.participant_ndx:
+
+    if int(args.participant_ndx) == -1:
+        args.participant_ndx = os.environ['AWS_BATCH_JOB_ARRAY_INDEX']
+
     if 0 <= int(args.participant_ndx) < len(sub_list):
         # make sure to keep it a list
+        print('Processing data for participant {0} ({1})'.format(args.participant_ndx, sub_list[int(args.participant_ndx)]["subject_id"]))
         sub_list = [sub_list[int(args.participant_ndx)]]
         data_config_file = "cpac_data_config_pt%s_%s.yml" % (args.participant_ndx, st)
     else:
@@ -287,6 +358,7 @@ if args.participant_ndx:
 else:
     # write out the data configuration file
     data_config_file = "cpac_data_config_{0}.yml".format(st)
+
 
 if "s3://" not in args.output_dir.lower():
     data_config_file = os.path.join(args.output_dir, data_config_file)
