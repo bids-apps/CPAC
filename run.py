@@ -185,7 +185,7 @@ else:
 if args.aws_input_creds:
     if args.aws_input_creds == "env":
         import urllib2
-        aws_creds_address = "169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
+        aws_creds_address = "http://169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
         aws_creds = urllib2.urlopen(aws_creds_address).read()
 
         args.aws_input_creds = "/tmp/aws_input_creds.csv"
@@ -230,7 +230,7 @@ if args.aws_output_creds:
 
     if args.aws_output_creds == "env":
         import urllib2
-        aws_creds_address = "169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
+        aws_creds_address = "http://169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
         aws_creds = urllib2.urlopen(aws_creds_address).read()
 
         args.aws_output_creds = "/tmp/aws_output_creds.csv"
