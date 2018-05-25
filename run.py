@@ -329,6 +329,14 @@ if not args.data_config_file:
 
     from CPAC.utils.build_data_config import get_file_list, get_BIDS_data_dct
 
+    inclusion_dct = None 
+
+    if args.participant_label:
+        if not inclusion_dct:
+            inclusion_dct = {"participants": args.participant_label}
+        else:
+            inclusion_dct["participants"] = args.participant_label
+    
     file_list = get_file_list(args.bids_dir,
                               creds_path=args.aws_input_creds)
 
@@ -336,7 +344,7 @@ if not args.data_config_file:
                                  file_list=file_list,
                                  anat_scan=args.anat_select_string,
                                  aws_creds_path=args.aws_input_creds,
-                                 inclusion_dct={"participants":args.participant_label},
+                                 inclusion_dct=inclusion_dct,
                                  config_dir="/scratch/")
 
 

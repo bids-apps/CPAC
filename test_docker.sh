@@ -7,12 +7,12 @@ docker run -it --rm \
      cpac_next \
      s3://fcp-indi/data/Projects/ABIDE/RawDataBIDS/Caltech \
      /mnt/outputs \
-     participant \
+     test_config \
      --n_cpus 8 \
      --mem_gb 16 \
      --pipeline_file /mnt/test_pipeline.yaml \
-     --participant_label 0051480
-     #--participant_ndx -1 
+     --participant_ndx 2 
+     #--participant_label 0051480
      #--data_config_file s3://fcp-indi/data/Projects/ABIDE/cpac_data_config.yml \
 #docker run -it --rm \
      #-v /home/ccraddock/CPAC/outputs:/mnt \
