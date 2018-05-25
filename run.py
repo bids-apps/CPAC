@@ -130,6 +130,14 @@ parser.add_argument('--participant_ndx', help='The index of the participant'
                                               ' Use the value "-1" to indicate that the participant index should'
                                               ' be read from the AWS_BATCH_JOB_ARRAY_INDEX environment variable.',
                     default=None)
+parser.add_argument('--anat_select_string', help='C-PAC requires an anatomical file for each session, but cannot'
+                                                 ' make use of more than one anatomical file. If the session'
+                                                 ' contains multiple _T1w files, it will arbitrarily choose one'
+                                                 ' to process, and this may not be consistent across sessions.'
+                                                 ' Use this flag and a string to select the anat to use when more'
+                                                 ' than one option is available. Examples might be "run-01" or'
+                                                 ' "acq-Sag3D."',
+                    default=None)
 parser.add_argument('-v', '--version', action='version',
                     version='C-PAC BIDS-App version {}'.format(__version__))
 parser.add_argument('--bids_validator_config', help='JSON file specifying configuration of '
@@ -294,30 +302,61 @@ if args.analysis_level == "group":
 # otherwise we move on to conforming the data configuration
 if not args.data_config_file:
 
-    from bids_utils import collect_bids_files_configs, bids_gen_cpac_sublist
+    #from bids_utils import collect_bids_files_configs, bids_gen_cpac_sublist
 
-    (file_paths, config) = collect_bids_files_configs(args.bids_dir, args.aws_input_creds)
+    #(file_paths, config) = collect_bids_files_configs(args.bids_dir, args.aws_input_creds)
 
-    if args.participant_label:
+    #if args.participant_label:
 
-        pt_file_paths = []
-        for pt in args.participant_label:
+        #pt_file_paths = []
+        #for pt in args.participant_label:
 
-            if 'sub-' not in pt:
-                pt = 'sub-' + pt
+            #if 'sub-' not in pt:
+                #pt = 'sub-' + pt
 
-            pt_file_paths += [fp for fp in file_paths if pt in fp]
+            #pt_file_paths += [fp for fp in file_paths if pt in fp]
 
-        file_paths = pt_file_paths
+        #file_paths = pt_file_paths
 
-    if not file_paths:
-        print ("Did not find any files to process")
-        sys.exit(1)
+    #if not file_paths:
+        #print ("Did not find any files to process")
+        #sys.exit(1)
 
     # TODO: once CPAC is updated to use per-scan parameters from subject list,
     # change the 3rd arguement to the config dict returned from
     # collect_bids_files_configs
-    sub_list = bids_gen_cpac_sublist(args.bids_dir, file_paths, [], args.aws_input_creds)
+    #sub_list = bids_gen_cpac_sublist(args.bids_dir, file_paths, [], args.aws_input_creds)
+
+    from CPAC.utils.build_data_config import get_file_list, get_BIDS_data_dct
+
+    file_list = get_file_list(args.bids_dir,
+                              creds_path=args.aws_input_creds)
+
+    data_dct = get_BIDS_data_dct(args.bids_dir,
+                                 file_list=file_list,
+                                 anat_scan=args.anat_select_string,
+                                 aws_creds_path=args.aws_input_creds,
+                                 inclusion_dct={"participants":args.participant_label},
+                                 config_dir="/scratch/")
+
+
+    if len(data_dct) > 0:
+
+        # put data_dct contents in an ordered list for the YAML dump
+        sub_list = []
+
+        included = {'site': [], 'sub': []}
+        num_sess = num_scan = 0
+
+        for site in sorted(data_dct.keys()):
+            for sub in sorted(data_dct[site].keys()):
+                for ses in sorted(data_dct[site][sub].keys()):
+                    # avoiding including anatomicals if there are no
+                    # functionals associated with it (i.e. if we're
+                    # using scan inclusion/exclusion and only some
+                    # participants have the scans included)
+                    if 'func' in data_dct[site][sub][ses]:
+                        sub_list.append(data_dct[site][sub][ses])
 
     if not sub_list:
         print("Did not find data in {0}".format(args.bids_dir))

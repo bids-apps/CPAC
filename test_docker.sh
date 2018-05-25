@@ -10,7 +10,7 @@ docker run -it --rm \
      participant \
      --n_cpus 8 \
      --mem_gb 16 \
-     --pipeline_file /cpac_resources/test_pipeline.yaml \
+     --pipeline_file /mnt/test_pipeline.yaml \
      --participant_label 0051480
      #--participant_ndx -1 
      #--data_config_file s3://fcp-indi/data/Projects/ABIDE/cpac_data_config.yml \
