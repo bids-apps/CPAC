@@ -190,7 +190,7 @@ if args.aws_input_creds:
 
         args.aws_input_creds = "/tmp/aws_input_creds.csv"
 
-        with open(args.aws_input_creds) as ofd:
+        with open(args.aws_input_creds, 'w') as ofd:
             for key, vname in [("AccessKeyId","AWSAcessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
                 ofd.write("{0}={1}".format(vname,aws_creds[key])) 
 
@@ -235,7 +235,7 @@ if args.aws_output_creds:
 
         args.aws_output_creds = "/tmp/aws_output_creds.csv"
 
-        with open(args.aws_output_creds) as ofd:
+        with open(args.aws_output_creds, 'w') as ofd:
             for key, vname in [("AccessKeyId","AWSAcessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
                 ofd.write("{0}={1}".format(vname,aws_creds[key])) 
 
