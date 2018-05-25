@@ -38,7 +38,30 @@ def load_yaml_config(config_filename, aws_input_creds):
 
     return(config_data)
 
+def write_yaml_config(config_filename, body, aws_output_creds):
 
+    if config_filename.lower().startswith("s3://"):
+
+        # s3 paths begin with s3://bucket/
+        bucket_name = config_filename.split('/')[2]
+        s3_prefix = '/'.join(config_filename.split('/')[:3])
+        s3_key = config_filename.replace(s3_prefix, '').lstrip('/')
+
+        if aws_output_creds:
+            if not os.path.isfile(aws_output_creds):
+                raise IOError("Could not find aws_output_creds (%s)" %
+                              (aws_output_creds))
+
+        from indi_aws import fetch_creds
+        bucket = fetch_creds.return_bucket(aws_output_creds, bucket_name)
+
+        bucket.put_object(Body=body, Key=s3_key)
+        config_filename = '/tmp/'+os.path.basename(config_filename)
+
+    with open(config_filename, 'w') as ofd:
+        ofd.writelines(body)
+
+    return(config_filename)
 
 def run(command, env={}):
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -289,13 +312,8 @@ ts = time.time()
 st = datetime.datetime.fromtimestamp(ts).strftime('%Y%m%d%H%M%S')
 
 # update config file
-if "s3://" not in args.output_dir.lower():
-    config_file = os.path.join(args.output_dir, "cpac_pipeline_config_{0}.yml".format(st))
-else:
-    config_file = os.path.join("/scratch", "cpac_pipeline_config_{0}.yml".format(st))
-
-with open(config_file, 'w') as f:
-    yaml.dump(c, f)
+config_file = os.path.join(args.output_dir, "cpac_pipeline_config_{0}.yml".format(st))
+config_file = write_yaml_config(config_file, yaml.dump(c), args.aws_output_creds)
 
 # we have all we need if we are doing a group level analysis
 if args.analysis_level == "group":
@@ -414,13 +432,8 @@ else:
     data_config_file = "cpac_data_config_{0}.yml".format(st)
 
 
-if "s3://" not in args.output_dir.lower():
-    data_config_file = os.path.join(args.output_dir, data_config_file)
-else:
-    data_config_file = os.path.join("/scratch", data_config_file)
-
-with open(data_config_file, 'w') as f:
-    yaml.dump(sub_list, f)
+data_config_file = os.path.join(args.output_dir, data_config_file)
+data_config_file = write_yaml_config(data_config_file, yaml.dump(sub_list), args.aws_output_creds)
 
 if args.analysis_level == "participant":
     # build pipeline easy way
