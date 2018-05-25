@@ -265,6 +265,10 @@ else:
     c['workingDirectory'] = os.path.join('/scratch', "working")
 
 if args.participant_label:
+    t_participant_label_list = []
+    for label in args.participant_label:
+        t_participant_label_list += label.split()
+    args.participant_label = t_participant_label_list
     print ("#### Running C-PAC on {0}".format(args.participant_label))
 else:
     print ("#### Running C-PAC")
