@@ -215,7 +215,7 @@ if args.aws_input_creds:
         args.aws_input_creds = "/tmp/aws_input_creds.csv"
 
         with open(args.aws_input_creds, 'w') as ofd:
-            for key, vname in [("AccessKeyId","AWSAcessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
+            for key, vname in [("AccessKeyId","AWSAccessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
                 ofd.write("{0}={1}".format(vname,aws_creds[key])) 
 
     if os.path.isfile(args.aws_input_creds):
