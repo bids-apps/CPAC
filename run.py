@@ -27,9 +27,9 @@ def load_yaml_config(config_filename, aws_input_creds):
         from indi_aws import fetch_creds
         bucket = fetch_creds.return_bucket(aws_input_creds, bucket_name)
 
-        bucket.download_file(prefix, '/tmp/'+os.path.basename(config_filename))
+        bucket.download_file(prefix, '/scratch/'+os.path.basename(config_filename))
 
-        config_filename = '/tmp/'+os.path.basename(config_filename)
+        config_filename = '/scratch/'+os.path.basename(config_filename)
 
     config_filename = os.path.realpath(config_filename)
     if os.path.isfile(config_filename):
@@ -56,7 +56,7 @@ def write_yaml_config(config_filename, body, aws_output_creds):
         bucket = fetch_creds.return_bucket(aws_output_creds, bucket_name)
 
         bucket.put_object(Body=body, Key=s3_key)
-        config_filename = '/tmp/'+os.path.basename(config_filename)
+        config_filename = '/scratch/'+os.path.basename(config_filename)
 
     with open(config_filename, 'w') as ofd:
         ofd.writelines(body)
@@ -212,11 +212,11 @@ if args.aws_input_creds:
         aws_creds_address = "http://169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
         aws_creds = json.loads(urllib2.urlopen(aws_creds_address).read())
 
-        args.aws_input_creds = "/tmp/aws_input_creds.csv"
+        args.aws_input_creds = "/scratch/aws_input_creds.csv"
 
         with open(args.aws_input_creds, 'w') as ofd:
             for key, vname in [("AccessKeyId","AWSAccessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
-                ofd.write("{0}={1}".format(vname,aws_creds[key])) 
+                ofd.write("{0}={1}\n".format(vname,aws_creds[key])) 
 
     if os.path.isfile(args.aws_input_creds):
         c['awsCredentialsFile'] = args.aws_input_creds
@@ -259,11 +259,11 @@ if args.aws_output_creds:
         aws_creds_address = "http://169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
         aws_creds = json.loads(urllib2.urlopen(aws_creds_address).read())
 
-        args.aws_output_creds = "/tmp/aws_output_creds.csv"
+        args.aws_output_creds = "/scratch/aws_output_creds.csv"
 
         with open(args.aws_output_creds, 'w') as ofd:
             for key, vname in [("AccessKeyId","AWSAccessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
-                ofd.write("{0}={1}".format(vname,aws_creds[key])) 
+                ofd.write("{0}={1}\n".format(vname,aws_creds[key])) 
 
     if os.path.isfile(args.aws_output_creds):
         c['awsOutputBucketCredentials'] = args.aws_output_creds
@@ -450,6 +450,7 @@ if args.analysis_level == "participant":
 else:
     print ('This has been a test run, the pipeline and data configuration files should'
            ' have been written to {0} and {1} respectively.'
-           ' CPAC will not be run.'.format(config_file, data_config_file))
+           ' CPAC will not be run.'.format(os.path.join(args.output_dir, os.path.basename(config_file)),
+           os.path.join(args.output_dir, os.path.basename(data_config_file))))
 
 sys.exit(0)
