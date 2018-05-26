@@ -113,11 +113,20 @@ parser.add_argument('--data_config_file', help='Yaml file containing the locatio
                                                ' This may require AWS S3 credentials specificied via the'
                                                ' --aws_input_creds option.',
                     default=None)
-parser.add_argument('--aws_input_creds', help='Credentials for reading from S3.'
+parser.add_argument('--aws_data_input_creds', help='Credentials for reading data from S3.'
                                               ' If not provided and s3 paths are specified in the data config'
-                                              ' we will try to access the bucket anonymously'
-                                              ' use the string "env" to indicate that input credentials should'
-                                              ' read from the environment. (E.g. when using AWS iam roles).',
+                                              ' or for the bids input directory'
+                                              ' we will try to access the bucket using credententials read'
+                                              ' from the environment. Use the string "anon" to indicate that'
+                                              ' data should be read anonymously (e.g. for public S3 buckets).',
+                    default=None)
+parser.add_argument('--aws_config_input_creds', help='Credentials for configuration files from S3.'
+                                              ' If not provided and s3 paths are specified for the config files'
+                                              ' we will try to access the bucket using credententials read'
+                                              ' from the environment. Use the string "anon" to indicate that'
+                                              ' data should be read anonymously (e.g. for public S3 buckets).'
+                                              ' This was added to allow configuration files to be read from '
+                                              ' different bucket than the data.',
                     default=None)
 parser.add_argument('--aws_output_creds', help='Credentials for writing to S3.'
                                                ' If not provided and s3 paths are specified in the output directory'
@@ -205,28 +214,21 @@ else:
     run("bids-validator {bids_dir}".format(bids_dir=args.bids_dir))
 
 # get the aws_input_credentials, if any are specified
-if args.aws_input_creds:
-    if args.aws_input_creds == "env":
-        import urllib2
-        import json
-        aws_creds_address = "http://169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
-        aws_creds = json.loads(urllib2.urlopen(aws_creds_address).read())
-        print('{0} {1}'.format(aws_creds_address, aws_creds))
+if args.aws_data_input_creds:
+    if args.aws_data_input_creds != "anon":
+        if  os.path.isfile(args.aws_data_input_creds):
+            c['awsCredentialsFile'] = args.aws_data_input_creds
+        else:
+            raise IOError("Could not find aws data input credentials {0}".format(args.aws_data_input_creds))
 
-        args.aws_input_creds = "/scratch/aws_input_creds.csv"
-
-        with open(args.aws_input_creds, 'w') as ofd:
-            for key, vname in [("AccessKeyId","AWSAccessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
-                ofd.write("{0}={1}\n".format(vname,aws_creds[key])) 
-
-    if os.path.isfile(args.aws_input_creds):
-        c['awsCredentialsFile'] = args.aws_input_creds
-    else:
-        raise IOError("Could not find aws credentials {0}".format(args.aws_input_creds))
+if args.aws_config_input_creds:
+    if args.aws_config_input_creds != "anon":
+        if  not os.path.isfile(args.aws_config_input_creds):
+            raise IOError("Could not find aws credentials {0}".format(args.aws_config_input_creds))
 
 # otherwise, if we are running group, participant, or dry run we
 # begin by conforming the configuration
-c = load_yaml_config(args.pipeline_file, args.aws_input_creds)
+c = load_yaml_config(args.pipeline_file, args.aws_config_input_creds)
 
 # set the parameters using the command line arguements
 # TODO: we will need to check that the directories exist, and
@@ -252,25 +254,11 @@ c['numParticipantsAtOnce'] = 1
 c['num_ants_threads'] = min(int(args.n_cpus), int(c['num_ants_threads']))
 
 if args.aws_output_creds:
-
-    if args.aws_output_creds == "env":
-        import urllib2
-        import json
-
-        aws_creds_address = "http://169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
-        aws_creds = json.loads(urllib2.urlopen(aws_creds_address).read())
-        print('{0} {1}'.format(aws_creds_address, aws_creds))
-
-        args.aws_output_creds = "/scratch/aws_output_creds.csv"
-
-        with open(args.aws_output_creds, 'w') as ofd:
-            for key, vname in [("AccessKeyId","AWSAccessKeyId"), ("SecretAccessKey","AWSSecretKey")]:
-                ofd.write("{0}={1}\n".format(vname,aws_creds[key])) 
-
-    if os.path.isfile(args.aws_output_creds):
-        c['awsOutputBucketCredentials'] = args.aws_output_creds
-    else:
-        raise IOError("Could not find aws credentials {0}".format(args.aws_output_creds))
+    if args.aws_output_creds != "anon":
+        if os.path.isfile(args.aws_output_creds):
+            c['awsOutputBucketCredentials'] = args.aws_output_creds
+        else:
+            raise IOError("Could not find aws credentials {0}".format(args.aws_output_creds))
 
 if args.disable_file_logging is True:
     c['disable_log'] = True
@@ -329,31 +317,6 @@ if args.analysis_level == "group":
 # otherwise we move on to conforming the data configuration
 if not args.data_config_file:
 
-    #from bids_utils import collect_bids_files_configs, bids_gen_cpac_sublist
-
-    #(file_paths, config) = collect_bids_files_configs(args.bids_dir, args.aws_input_creds)
-
-    #if args.participant_label:
-
-        #pt_file_paths = []
-        #for pt in args.participant_label:
-
-            #if 'sub-' not in pt:
-                #pt = 'sub-' + pt
-
-            #pt_file_paths += [fp for fp in file_paths if pt in fp]
-
-        #file_paths = pt_file_paths
-
-    #if not file_paths:
-        #print ("Did not find any files to process")
-        #sys.exit(1)
-
-    # TODO: once CPAC is updated to use per-scan parameters from subject list,
-    # change the 3rd arguement to the config dict returned from
-    # collect_bids_files_configs
-    #sub_list = bids_gen_cpac_sublist(args.bids_dir, file_paths, [], args.aws_input_creds)
-
     from CPAC.utils.build_data_config import get_file_list, get_BIDS_data_dct
 
     inclusion_dct = None 
@@ -364,13 +327,15 @@ if not args.data_config_file:
         else:
             inclusion_dct["participants"] = args.participant_label
     
+    print('args.aws_data_input_creds {0}'.format(args.aws_data_input_creds))
+
     file_list = get_file_list(args.bids_dir,
-                              creds_path=args.aws_input_creds)
+                              creds_path=args.aws_data_input_creds)
 
     data_dct = get_BIDS_data_dct(args.bids_dir,
                                  file_list=file_list,
                                  anat_scan=args.anat_select_string,
-                                 aws_creds_path=args.aws_input_creds,
+                                 aws_creds_path=args.aws_data_input_creds,
                                  inclusion_dct=inclusion_dct,
                                  config_dir="/scratch/")
 
@@ -399,7 +364,7 @@ if not args.data_config_file:
 
 else:
     # load the file as a check to make sure it is available and readable
-    sub_list = load_yaml_config(args.data_config_file, args.aws_input_creds)
+    sub_list = load_yaml_config(args.data_config_file, args.aws_config_input_creds)
 
     if args.participant_label:
         t_sub_list = []

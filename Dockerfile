@@ -114,7 +114,6 @@ RUN pip install \
       configparser \
       fs==0.5.4 \
       future==0.15.2 \
-      INDI-Tools \
       lockfile \
       memory_profiler \
       nibabel \
@@ -124,6 +123,8 @@ RUN pip install \
       prov \
       pygraphviz \
       simplejson
+
+RUN pip install git+https://github.com/ccraddock/INDI-Tools.git
 
 # install AFNI
 COPY required_afni_pkgs.txt /opt/required_afni_pkgs.txt
@@ -180,7 +181,8 @@ RUN cd cpac_resources && \
     rm -f /cpac_resources/cpac_templates.tar.gz
     
 # install cpac
-RUN pip install git+https://github.com/FCP-INDI/C-PAC.git@v1.1.0
+#RUN pip install git+https://github.com/FCP-INDI/C-PAC.git@v1.1.0
+RUN pwd && pip install git+https://github.com/ccraddock/C-PAC.git
 
 # make directory for nipype
 RUN mkdir /.nipype && \
