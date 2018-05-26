@@ -211,6 +211,7 @@ if args.aws_input_creds:
         import json
         aws_creds_address = "http://169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
         aws_creds = json.loads(urllib2.urlopen(aws_creds_address).read())
+        print('{0} {1}'.format(aws_creds_address, aws_creds))
 
         args.aws_input_creds = "/scratch/aws_input_creds.csv"
 
@@ -258,6 +259,7 @@ if args.aws_output_creds:
 
         aws_creds_address = "http://169.254.170.2"+os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
         aws_creds = json.loads(urllib2.urlopen(aws_creds_address).read())
+        print('{0} {1}'.format(aws_creds_address, aws_creds))
 
         args.aws_output_creds = "/scratch/aws_output_creds.csv"
 
