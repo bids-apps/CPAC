@@ -254,11 +254,9 @@ c['numParticipantsAtOnce'] = 1
 c['num_ants_threads'] = min(int(args.n_cpus), int(c['num_ants_threads']))
 
 if args.aws_output_creds:
-    if args.aws_output_creds != "anon":
-        if os.path.isfile(args.aws_output_creds):
-            c['awsOutputBucketCredentials'] = args.aws_output_creds
-        else:
-            raise IOError("Could not find aws credentials {0}".format(args.aws_output_creds))
+    c['awsOutputBucketCredentials'] = args.aws_output_creds
+    if args.aws_output_creds != "anon" and not os.path.isfile(args.aws_output_creds):
+        raise IOError("Could not find aws credentials {0}".format(args.aws_output_creds))
 
 if args.disable_file_logging is True:
     c['disable_log'] = True
