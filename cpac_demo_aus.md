@@ -11,7 +11,7 @@ C-PAC combines elements of AFNI, ANTS, and FSL with custom code in a customizabl
 Due to its complexity and the tools it uses, C-PAC can be very difficult to install locally and will only run natively on Linux (preferably Ubuntu or NeuroDebian) and Mac OS X. Alternatively, C-PAC can be run from a container, which is a single large binary file that contains all the tools and libraries necessary for it to run. We will use Docker (http://www.docker.io) containers for this demo since they are easy to install and work on most operating systems. Although Docker is a user friendly and mature toolset, there are some security issues with Docker that make unsuitable for some scenarios, such as running on large-scale multi-user high performance computing clusters. We also provide Singularity containers for C-PAC which are better suited for these situations, but we will not cover them in this tutorial. In-depth instructions for C-PAC containers can be found at https://github.com/bids-apps/cpac.
 
 ##### Basic installation steps
-1. Install Docker CE (community edition) from https://store.docker.com/editions/community/docker-ce-desktop-mac?tab=description.
+1. Install Docker CE (community edition) from https://store.docker.com/editions/community.
 
 2. Once docker is running, download the C-PAC container by typing the following into the terminal: ```docker pull bids/cpac```
 
