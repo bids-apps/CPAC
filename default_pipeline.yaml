@@ -509,4 +509,4 @@ modelConfigs :  []
 
 disable_log : False
 
-runEPI_DistCorr : 0
+runEPI_DistCorr : [0]

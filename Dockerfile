@@ -181,8 +181,8 @@ RUN cd cpac_resources && \
     rm -f /cpac_resources/cpac_templates.tar.gz
     
 # install cpac
-#RUN pip install git+https://github.com/FCP-INDI/C-PAC.git@v1.1.0
-RUN pwd && pip install git+https://github.com/ccraddock/C-PAC.git
+RUN pip install git+https://github.com/FCP-INDI/C-PAC.git@v1.1.0
+#RUN pwd && pip install git+https://github.com/ccraddock/C-PAC.git
 
 # make directory for nipype
 RUN mkdir /.nipype && \
