@@ -5,12 +5,10 @@ MAINTAINER John Pellman <john.pellman@childmind.org>
 RUN mkdir /scratch && mkdir /local-scratch && mkdir -p /code && mkdir -p /cpac_resources
 
 # install wget
-RUN apt-get update && apt-get install -y wget
+RUN apt-get update && apt-get install -y wget curl
 
 # Install the validator
-RUN apt-get update && \
-     apt-get install -y curl && \
-     curl -sL https://deb.nodesource.com/setup_4.x | bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_4.x | bash - && \
      apt-get install -y nodejs && \
      rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN npm install -g bids-validator
@@ -116,7 +114,6 @@ RUN pip install \
       configparser \
       fs==0.5.4 \
       future==0.15.2 \
-      INDI-Tools \
       lockfile \
       memory_profiler \
       nibabel \
@@ -126,6 +123,8 @@ RUN pip install \
       prov \
       pygraphviz \
       simplejson
+
+RUN pip install git+https://github.com/ccraddock/INDI-Tools.git
 
 # install AFNI
 COPY required_afni_pkgs.txt /opt/required_afni_pkgs.txt
@@ -177,12 +176,17 @@ RUN cd /tmp && \
 
 # install cpac templates
 COPY cpac_templates.tar.gz /cpac_resources/cpac_templates.tar.gz
-RUN tar xzvf /cpac_resources/cpac_templates.tar.gz && \
+RUN cd cpac_resources && \
+    tar xzvf /cpac_resources/cpac_templates.tar.gz && \
     rm -f /cpac_resources/cpac_templates.tar.gz
     
 # install cpac
-RUN pip install git+https://github.com/jdkent/C-PAC.git@fix_pylock
+RUN pip install git+https://github.com/FCP-INDI/C-PAC.git@v1.1.0
+#RUN pwd && pip install git+https://github.com/ccraddock/C-PAC.git
 
+# make directory for nipype
+RUN mkdir /.nipype && \
+    chmod 777 /.nipype
 
 # clean up
 RUN apt-get clean && \
