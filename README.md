@@ -211,7 +211,7 @@ This App has the following command line arguments:
 
 1. Start the docker container, mapping the X socket (change /Users/filo to a local directory on your computer)
 
-```
+```bash
     docker run -i --rm \
         --privileged \
         -e DISPLAY=$DISPLAY \
@@ -229,7 +229,7 @@ This App has the following command line arguments:
 
 2. Start XQuartz (from terminal)
 
-```
+```bash
     open -a XQuartz
 ```
 
@@ -239,20 +239,20 @@ XQuartz -> preferences -> security -> "Allow connections from network clients"
 
 4. Get your ip address (e.g., might have to change eth0 to match the name of your network interface.)
 
-```
+```bash
     ip=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
 
 ```
 
 5. Tell xhost to accept connections from the localhost
 
-```
+```bash
 xhost + ${ip}
 ```
    
 6. Start the docker container, mapping the X socket (change /Users/filo to a local directory on your computer)
 
-```
+```bash
     docker run -i --rm \
         --privileged \
         -e DISPLAY=$ip:0 \
@@ -268,7 +268,7 @@ xhost + ${ip}
 
 1. Start the docker container (it just works!, provided you change /Users/filo to a local directory on your computer)
 
-```
+```bash
     singularity run \
         -B /home/ubuntu:/mnt \
         -B /mnt:/scratch \
