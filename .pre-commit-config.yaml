@@ -1,0 +1,9 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+
+  - repo: https://github.com/AleksaC/circleci-cli-py
+    rev: v0.1.22924
+    hooks:
+      - id: circle-ci-validator
