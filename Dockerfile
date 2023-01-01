@@ -1,21 +1,21 @@
 FROM neurodebian:xenial-non-free
-MAINTAINER John Pellman <john.pellman@childmind.org>
+LABEL John Pellman <john.pellman@childmind.org>
 
 # create scratch directories for singularity
 RUN mkdir /scratch && mkdir /local-scratch && mkdir -p /code && mkdir -p /cpac_resources
 
 # install wget
-RUN apt-get update && apt-get install -y wget curl
+RUN apt-get update -qq && apt-get install -y -q wget curl
 
 # Install the validator
-RUN curl -sL https://deb.nodesource.com/setup_4.x | bash - && \
-     apt-get install -y nodejs && \
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+     apt-get install -y -q nodejs && \
      rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN npm install -g bids-validator
 
 # Install Ubuntu dependencies
-RUN apt-get update && \
-    apt-get install -y \
+RUN apt-get update -qq && \
+    apt-get install -y -q \
       build-essential \
       cmake \
       git \
@@ -54,8 +54,8 @@ RUN apt-get update && \
       zlib1g-dev
 
 # Install 16.04 dependencies
-RUN apt-get update && \
-    apt-get install -y \
+RUN apt-get update -qq && \
+    apt-get install -y -q \
       dh-autoreconf \
       libgsl-dev \
       libmotif-dev \
@@ -142,7 +142,7 @@ ENV PATH=/opt/afni:$PATH
 
 # install FSL
 RUN apt-get update  && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y -q --no-install-recommends \
                     fsl-core \
                     fsl-atlases \
                     fsl-mni152-templates
@@ -158,8 +158,8 @@ ENV FSLDIR=/usr/share/fsl/5.0 \
     PATH=/usr/lib/fsl/5.0:$PATH
 
 # install ANTs
-RUN apt-get update && \
-    apt-get install -y \
+RUN apt-get update -qq && \
+    apt-get install -y -q \
     ants
 
 # install cpac resources
