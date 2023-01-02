@@ -317,14 +317,14 @@ if not args.data_config_file:
 
     from CPAC.utils.build_data_config import get_file_list, get_BIDS_data_dct
 
-    inclusion_dct = None 
+    inclusion_dct = None
 
     if args.participant_label:
         if not inclusion_dct:
             inclusion_dct = {"participants": args.participant_label}
         else:
             inclusion_dct["participants"] = args.participant_label
-    
+
     print('args.aws_data_input_creds {0}'.format(args.aws_data_input_creds))
 
     file_list = get_file_list(args.bids_dir,

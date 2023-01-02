@@ -243,7 +243,7 @@ def gen_bids_outputs_sublist(base_path, paths_list, key_list, creds_path):
     if not base_path.endswith('/'):
         base_path = base_path + '/'
 
-    # output directories are a bit different than standard BIDS, so 
+    # output directories are a bit different than standard BIDS, so
     # we handle things differently
 
     for p in paths_list:

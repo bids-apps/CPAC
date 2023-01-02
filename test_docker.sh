@@ -15,7 +15,7 @@ docker run -it --rm \
      --mem_gb 16 \
      --pipeline_file s3://dms-iaic/cpac_test/test1/output/cpac_pipeline_config_20180526200954.yml \
      --participant_label '0051480 0051481' \
-     --participant_ndx 1 
+     --participant_ndx 1
 
      #--aws_output_creds env \
 

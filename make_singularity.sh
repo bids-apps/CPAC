@@ -3,4 +3,3 @@ docker run --privileged -ti --rm  \
     -v ${PWD}/singularity_images:/output \
     filo/docker2singularity \
     bids/cpac
-  

@@ -1,20 +1,24 @@
+---
 sudo: required
 
 language: python
 
 services:
-  - docker
+- docker
 
 before_install:
-  - echo "TRAVIS_BRANCH $TRAVIS_BRANCH, TRAVIS_TAG $TRAVIS_TAG, TRAVIS_PULL_REQUEST $TRAVIS_PULL_REQUEST"
-  - pip install awscli
-  - docker build -t bids/cpac .
-  - docker pull filo/docker2singularity
-  - mkdir -p ${HOME}/singularity_images
-  - docker run -ti --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ${HOME}/singularity_images:/output filo/docker2singularity "bids/cpac"
+- echo "TRAVIS_BRANCH $TRAVIS_BRANCH, TRAVIS_TAG $TRAVIS_TAG, TRAVIS_PULL_REQUEST $TRAVIS_PULL_REQUEST"
+- pip install awscli
+- docker build -t bids/cpac .
+- docker pull filo/docker2singularity
+- mkdir -p ${HOME}/singularity_images
+- docker run -ti --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ${HOME}/singularity_images:/output filo/docker2singularity "bids/cpac"
 
 script:
-  - sing_img=$(ls -t ${HOME}/singularity_images | head -n 1); docker run --rm --privileged -v ${HOME}/singularity_images:/output --entrypoint /output/${sing_img} filo/docker2singularity -h
+- sing_img=$(ls -t ${HOME}/singularity_images | head -n 1); docker run --rm --privileged -v ${HOME}/singularity_images:/output --entrypoint /output/${sing_img}
+  filo/docker2singularity -h
 
 after_success:
-  - if [ ! -z "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then sing_img=$(ls -t ${HOME}/singularity_images | head -n 1); version=$( git describe --tags ); echo "$sing_img ... $version"; aws s3 cp --quiet --acl public-read ${HOME}/singularity_images/${sing_img} s3://fcp-indi/resources/singularity_images/bids_cpac/bids_cpac_${TRAVIS_TAG}.img;  aws s3 cp --quiet --acl public-read ${HOME}/singularity_images/${sing_img} s3://fcp-indi/resources/singularity_images/bids_cpac/bids_cpac_latest.img; fi
+- if [ ! -z "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then sing_img=$(ls -t ${HOME}/singularity_images | head -n 1); version=$( git describe
+  --tags ); echo "$sing_img ... $version"; aws s3 cp --quiet --acl public-read ${HOME}/singularity_images/${sing_img} s3://fcp-indi/resources/singularity_images/bids_cpac/bids_cpac_${TRAVIS_TAG}.img;  aws
+  s3 cp --quiet --acl public-read ${HOME}/singularity_images/${sing_img} s3://fcp-indi/resources/singularity_images/bids_cpac/bids_cpac_latest.img; fi

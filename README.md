@@ -1,7 +1,7 @@
 # C-PAC BIDS Application
 
 ## Documentation
-Extensive information can be found in the [C-PAC User Guide](http://fcp-indi.github.com/docs/user/index.html). 
+Extensive information can be found in the [C-PAC User Guide](http://fcp-indi.github.com/docs/user/index.html).
 
 ## Description
 The Configurable Pipeline for the Analysis of Connectomes [C-PAC](http://fcp-indi.github.io) is a software for
@@ -12,9 +12,9 @@ docker container, when built, is an application for performing participant level
 group-level analyses, when there is a BIDS standard for handling derivatives and group models.
 
 ### A note about versioning
-C-PAC BIDS Apps version tags are composed of the C-PAC version followed by an underscore and then the version of the 
-container. The container version restarts for every new C-PAC version and is a single integer that reflects the 
-modification number of the build. For example ```v1.0.1a_5``` corresponds to the 5th build of the container for C-PAC 
+C-PAC BIDS Apps version tags are composed of the C-PAC version followed by an underscore and then the version of the
+container. The container version restarts for every new C-PAC version and is a single integer that reflects the
+modification number of the build. For example ```v1.0.1a_5``` corresponds to the 5th build of the container for C-PAC
 version v1.0.1a.
 
 ### Usage notes
@@ -249,7 +249,7 @@ XQuartz -> preferences -> security -> "Allow connections from network clients"
 ```bash
 xhost + ${ip}
 ```
-   
+
 6. Start the docker container, mapping the X socket (change /Users/filo to a local directory on your computer)
 
 ```bash
@@ -262,7 +262,7 @@ xhost + ${ip}
         -v /Users/filo/outputs:/outputs \
 		bids/cpac \
 		/bids_dataset /outputs GUI
-``` 
+```
 
 #### Running singularity container on Linux
 
@@ -278,7 +278,7 @@ xhost + ${ip}
         /bids_dataset \
         /outputs\
         GUI
-``` 
+```
 
 ### To convert the Docker container to a [Singularity](http://singularity.lbl.gov/) container :
 
@@ -326,8 +326,8 @@ xhost + ${ip}
 #### Notes:
 1. With the exception of your home directory, which is mounted from the local filesystem, the filesystem in Singularity
 containers is read-only. Files can be easily transferred in and out of the container by mapping local directories to
-directories inside the container using the `-B from:to` command line argument, where the `from` dir is mapped to `to`. 
-When using mapped directories, remember that the paths specified on the command line are in relation to the directory 
+directories inside the container using the `-B from:to` command line argument, where the `from` dir is mapped to `to`.
+When using mapped directories, remember that the paths specified on the command line are in relation to the directory
 inside the container (e.g. the `to` directory).
 
 2. Unless the `--save_working_dir` flag is set, the C-PAC app will use the `/scratch` directory for intermediary files.
@@ -355,10 +355,10 @@ We currently have a publication in preparation, in the meantime please cite our 
 
     @ARTICLE{cpac2013,
         AUTHOR={Craddock, Cameron  and  Sikka, Sharad  and  Cheung, Brian  and  Khanuja, Ranjeet  and  Ghosh, Satrajit S
-            and Yan, Chaogan  and  Li, Qingyang  and  Lurie, Daniel  and  Vogelstein, Joshua  and  Burns, Randal  and  
+            and Yan, Chaogan  and  Li, Qingyang  and  Lurie, Daniel  and  Vogelstein, Joshua  and  Burns, Randal  and
             Colcombe, Stanley  and  Mennes, Maarten  and  Kelly, Clare  and  Di Martino, Adriana  and  Castellanos,
-            Francisco Xavier  and  Milham, Michael},  
-        TITLE={Towards Automated Analysis of Connectomes: The Configurable Pipeline for the Analysis of Connectomes (C-PAC)},     
+            Francisco Xavier  and  Milham, Michael},
+        TITLE={Towards Automated Analysis of Connectomes: The Configurable Pipeline for the Analysis of Connectomes (C-PAC)},
         JOURNAL={Frontiers in Neuroinformatics},
         YEAR={2013},
         NUMBER={42},
@@ -426,5 +426,3 @@ NeuroImage 48(1), 63–72 (2009). doi:10.1016/j.neuroimage.2009.06.060
 <a id="tt">23.</a> Lancaster, J. L., Woldorff, M. G., Parsons, L. M., Liotti, M., Freitas, C. S., Rainey, L., … Fox, P. T. (2000). Automated Talairach atlas labels for functional brain mapping. Human Brain Mapping, 10(3), 120–31. Retrieved from http://www.ncbi.nlm.nih.gov/pubmed/10912591
 
 <a id="cc">24.</a> Craddock, R. C., James, G. A., Holtzheimer, P. E., Hu, X. P., & Mayberg, H. S. (2011). A whole brain fMRI atlas generated via spatially constrained spectral clustering. Human Brain Mapping, 0(July 2010). http://doi.org/10.1002/hbm.21333
-
-
