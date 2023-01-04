@@ -4,18 +4,16 @@ LABEL John Pellman <john.pellman@childmind.org>
 # create scratch directories for singularity
 RUN mkdir /scratch && mkdir /local-scratch && mkdir -p /code && mkdir -p /cpac_resources
 
-# install wget
-RUN apt-get update -qq && apt-get install -y -q wget curl
-
-# Install the validator
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-     apt-get install -y -q nodejs && \
-     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y -q wget curl && \
+    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    apt-get install --no-install-recommends -y -q nodejs && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN npm install -g bids-validator
 
 # Install Ubuntu dependencies
 RUN apt-get update -qq && \
-    apt-get install -y -q \
+    apt-get install --no-install-recommends -y -q \
       build-essential \
       cmake \
       git \
@@ -51,11 +49,12 @@ RUN apt-get update -qq && \
       unzip \
       xvfb \
       xauth \
-      zlib1g-dev
+      zlib1g-dev && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install 16.04 dependencies
 RUN apt-get update -qq && \
-    apt-get install -y -q \
+    apt-get install --no-install-recommends -y -q \
       dh-autoreconf \
       libgsl-dev \
       libmotif-dev \
@@ -64,7 +63,8 @@ RUN apt-get update -qq && \
       libxext-dev \
       x11proto-xext-dev \
       x11proto-print-dev \
-      xutils-dev
+      xutils-dev && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Compiles libxp- this is necessary for some newer versions of Ubuntu
 # where the is no Debian package available.
@@ -159,8 +159,8 @@ ENV FSLDIR=/usr/share/fsl/5.0 \
 
 # install ANTs
 RUN apt-get update -qq && \
-    apt-get install -y -q \
-    ants
+    apt-get install -y -q --no-install-recommends \
+        ants
 
 # install cpac resources
 RUN cd /tmp && \

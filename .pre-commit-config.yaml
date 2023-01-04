@@ -12,6 +12,7 @@ repos:
   - id: check-json
   - id: check-added-large-files
   - id: check-case-conflict
+  - id: check-merge-conflict
 
 
 - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
@@ -19,3 +20,17 @@ repos:
   hooks:
   - id: yamlfmt
     args: [--mapping, '2', --sequence, '2', --offset, '0']
+
+
+- repo: https://github.com/hadolint/hadolint
+  rev: v2.12.0
+  hooks:
+  - id: hadolint-docker
+    name: Lint Dockerfiles
+    description: Runs hadolint Docker image to lint Dockerfiles
+    language: docker_image
+    types: [dockerfile]
+    entry: ghcr.io/hadolint/hadolint hadolint
+
+ci:
+  skip: [hadolint-docker]
