@@ -6,47 +6,31 @@ jobs:
     machine:
       # https://circleci.com/developer/machine/image/ubuntu-2204
       image: ubuntu-2204:2022.10.2
-
     steps:
     - checkout
     - restore_cache:
         keys:
         - my_cache
-
     - run:
-        name: 'Get test data: ds114_test1'
+        name: Get test data ds114_test1
         command: |
-          if [[ ! -d ~/data/ds114_test1 ]]; then
-            wget -c -O ${HOME}/ds114_test1.tar "https://osf.io/download/zerfq/" && \
-            mkdir -p ${HOME}/data && \
-            tar xf ${HOME}/ds114_test1.tar -C ${HOME}/data;
-          fi
+          wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/circleci/get_ds114_test1.sh
+          bash get_ds114_test1.sh 
     - run:
-        name: 'Get test data: ds114_test2'
+        name: Get test data ds114_test2
         command: |
-          if [[ ! -d ~/data/ds114_test2 ]]; then
-            wget -c -O ${HOME}/ds114_test2.tar "https://osf.io/download/eg4ma/" && \
-            mkdir -p ${HOME}/data && \
-            tar xf ${HOME}/ds114_test2.tar -C ${HOME}/data;
-          fi
-
+          wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/circleci/get_ds114_test2.sh
+          bash get_ds114_test2.sh 
     - run:
         name: Build Docker image
         command: |
-          if [[ -e ~/docker/image.tar ]]; \
-            then docker load -i ~/docker/image.tar;
-          fi
-          git describe --tags --always > version
-          docker build -t bids/${CIRCLE_PROJECT_REPONAME,,} .
-          mkdir -p ${HOME}/docker
-          docker save "bids/${CIRCLE_PROJECT_REPONAME,,}" > ~/docker/image.tar
-
+          wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/circleci/build_docker.sh
+          bash build_docker.sh 
     - save_cache:
         key: my_cache
         paths:
         - ~/docker
         - ~/data
-
     - persist_to_workspace:
         root: /home/circleci
         paths:
@@ -65,48 +49,54 @@ jobs:
     - run:
         command: |
           docker run -ti --rm --read-only \
-            -v ${HOME}/data/ds114_test1:/bids_dataset \
-            -v ${HOME}/outputs1:/outputs bids/${CIRCLE_PROJECT_REPONAME,,} \
-            /bids_dataset /outputs participant --participant_label 01 --n_cpus 2 \
+            -v /tmp/workspace/data/ds114_test1:/bids_dataset \
+            -v ${HOME}/outputs1:/outputs \
+              bids/${CIRCLE_PROJECT_REPONAME,,} \
+                /bids_dataset /outputs participant --participant_label 01 --n_cpus 2 \
+                --pipeline_file /cpac_resources/test_pipeline.yaml
+        no_output_timeout: 6h
+    - run:
+        command: |
+          docker run -ti --rm --read-only \
+              -v /tmp/workspace/data/ds114_test1:/bids_dataset \
+              -v ${HOME}/outputs1:/outputs \
+                bids/${CIRCLE_PROJECT_REPONAME,,} \
+                  /bids_dataset /outputs participant --participant_label 02 --n_cpus 2 \
+                  --pipeline_file /cpac_resources/test_pipeline.yaml
+        no_output_timeout: 6h
+    - run:
+        command: |
+          docker run -ti --rm --read-only \
+            -v /tmp/workspace/data/ds114_test1:/bids_dataset \
+            -v ${HOME}/outputs1:/outputs \
+              bids/${CIRCLE_PROJECT_REPONAME,,} \
+                /bids_dataset /outputs group --n_cpus 2
+        no_output_timeout: 6h
+    - run:
+        command: |
+          docker run -ti --rm --read-only \
+            -v /tmp/workspace/data/ds114_test2:/bids_dataset \
+            -v ${HOME}/outputs2:/outputs \
+            bids/${CIRCLE_PROJECT_REPONAME,,} \
+              /bids_dataset /outputs participant --participant_label 01 --n_cpus 2 \
+                --pipeline_file /cpac_resources/test_pipeline.yaml
+        no_output_timeout: 6h
+    - run:
+        command: |
+          docker run -ti --rm --read-only \
+          -v /tmp/workspace/data/ds114_test2:/bids_dataset \
+          -v ${HOME}/outputs2:/outputs \
+          bids/${CIRCLE_PROJECT_REPONAME,,} \
+            /bids_dataset /outputs participant --participant_label 02 --n_cpus 2 \
             --pipeline_file /cpac_resources/test_pipeline.yaml
         no_output_timeout: 6h
     - run:
         command: |
           docker run -ti --rm --read-only \
-              -v ${HOME}/data/ds114_test1:/bids_dataset \
-              -v ${HOME}/outputs1:/outputs bids/${CIRCLE_PROJECT_REPONAME,,} \
-              /bids_dataset /outputs participant --participant_label 02 --n_cpus 2 \
-              --pipeline_file /cpac_resources/test_pipeline.yaml
-        no_output_timeout: 6h
-    - run:
-        command: |
-          docker run -ti --rm --read-only \
-            -v ${HOME}/data/ds114_test1:/bids_dataset \
-            -v ${HOME}/outputs1:/outputs bids/${CIRCLE_PROJECT_REPONAME,,} \
+          -v /tmp/workspace/data/ds114_test2:/bids_dataset \
+          -v ${HOME}/outputs2:/outputs \
+          bids/${CIRCLE_PROJECT_REPONAME,,} \
             /bids_dataset /outputs group --n_cpus 2
-        no_output_timeout: 6h
-    - run:
-        command: |
-          docker run -ti --rm --read-only \
-            -v ${HOME}/data/ds114_test2:/bids_dataset \
-            -v ${HOME}/outputs2:/outputs bids/${CIRCLE_PROJECT_REPONAME,,} \
-            /bids_dataset /outputs participant --participant_label 01 --n_cpus 2 \
-            --pipeline_file /cpac_resources/test_pipeline.yaml
-        no_output_timeout: 6h
-    - run:
-        command: |
-          docker run -ti --rm --read-only \
-          -v ${HOME}/data/ds114_test2:/bids_dataset \
-          -v ${HOME}/outputs2:/outputs bids/${CIRCLE_PROJECT_REPONAME,,} \
-          /bids_dataset /outputs participant --participant_label 02 --n_cpus 2 \
-          --pipeline_file /cpac_resources/test_pipeline.yaml
-        no_output_timeout: 6h
-    - run:
-        command: |
-          docker run -ti --rm --read-only \
-          -v ${HOME}/data/ds114_test2:/bids_dataset \
-          -v ${HOME}/outputs2:/outputs bids/${CIRCLE_PROJECT_REPONAME,,} \
-          /bids_dataset /outputs group --n_cpus 2
         no_output_timeout: 6h
 
   deploy:
