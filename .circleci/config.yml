@@ -7,32 +7,32 @@ jobs:
       # https://circleci.com/developer/machine/image/ubuntu-2204
       image: ubuntu-2204:2022.10.2
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - my_cache
-      - run:
-          name: Get test data
-          command: |
-            wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/utils/get_data_from_osf.sh
-            bash get_data_from_osf.sh ds114_test1 
-            bash get_data_from_osf.sh ds114_test2
-      - run:
-          name: Build Docker image
-          command: |
-            wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/circleci/build_docker.sh
-            bash build_docker.sh
-      - save_cache:
-          key: my_cache
-          paths:
-            - ~/docker
-            - ~/data
-      - persist_to_workspace:
-          root: /home/circleci
-          paths:
-            - data/ds114_test1
-            - data/ds114_test2
-            - docker/image.tar
+    - checkout
+    - restore_cache:
+        keys:
+        - my_cache
+    - run:
+        name: Get test data
+        command: |
+          wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/utils/get_data_from_osf.sh
+          bash get_data_from_osf.sh ds114_test1
+          bash get_data_from_osf.sh ds114_test2
+    - run:
+        name: Build Docker image
+        command: |
+          wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/circleci/build_docker.sh
+          bash build_docker.sh
+    - save_cache:
+        key: my_cache
+        paths:
+        - ~/docker
+        - ~/data
+    - persist_to_workspace:
+        root: /home/circleci
+        paths:
+        - data/ds114_test1
+        - data/ds114_test2
+        - docker/image.tar
 
   test:
     machine:
@@ -43,74 +43,74 @@ jobs:
         type: string
 
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - run: docker load -i /tmp/workspace/docker/image.tar
+    - attach_workspace:
+        at: /tmp/workspace
+    - run: docker load -i /tmp/workspace/docker/image.tar
 
-      - run: mkdir -p ${HOME}/outputs<< parameters.dataset >>
+    - run: mkdir -p ${HOME}/outputs<< parameters.dataset >>
 
-      - run:
-          command: |
-            docker run -ti --rm --read-only \
+    - run:
+        command: |
+          docker run -ti --rm --read-only \
+            -v /tmp/workspace/data/ds114_test<< parameters.dataset >>:/bids_dataset \
+            -v ${HOME}/outputs<< parameters.dataset >>:/outputs \
+              bids/${CIRCLE_PROJECT_REPONAME,,} \
+                /bids_dataset /outputs participant --participant_label 01 --n_cpus 2 \
+                --pipeline_file /cpac_resources/test_pipeline.yaml
+        no_output_timeout: 6h
+    - run:
+        command: |
+          docker run -ti --rm --read-only \
               -v /tmp/workspace/data/ds114_test<< parameters.dataset >>:/bids_dataset \
               -v ${HOME}/outputs<< parameters.dataset >>:/outputs \
                 bids/${CIRCLE_PROJECT_REPONAME,,} \
-                  /bids_dataset /outputs participant --participant_label 01 --n_cpus 2 \
+                  /bids_dataset /outputs participant --participant_label 02 --n_cpus 2 \
                   --pipeline_file /cpac_resources/test_pipeline.yaml
-          no_output_timeout: 6h
-      - run:
-          command: |
-            docker run -ti --rm --read-only \
-                -v /tmp/workspace/data/ds114_test<< parameters.dataset >>:/bids_dataset \
-                -v ${HOME}/outputs<< parameters.dataset >>:/outputs \
-                  bids/${CIRCLE_PROJECT_REPONAME,,} \
-                    /bids_dataset /outputs participant --participant_label 02 --n_cpus 2 \
-                    --pipeline_file /cpac_resources/test_pipeline.yaml
-          no_output_timeout: 6h
-      - run:
-          command: |
-            docker run -ti --rm --read-only \
-              -v /tmp/workspace/data/ds114_test<< parameters.dataset >>:/bids_dataset \
-              -v ${HOME}/outputs<< parameters.dataset >>:/outputs \
-                bids/${CIRCLE_PROJECT_REPONAME,,} \
-                  /bids_dataset /outputs group --n_cpus 2
-          no_output_timeout: 6h
+        no_output_timeout: 6h
+    - run:
+        command: |
+          docker run -ti --rm --read-only \
+            -v /tmp/workspace/data/ds114_test<< parameters.dataset >>:/bids_dataset \
+            -v ${HOME}/outputs<< parameters.dataset >>:/outputs \
+              bids/${CIRCLE_PROJECT_REPONAME,,} \
+                /bids_dataset /outputs group --n_cpus 2
+        no_output_timeout: 6h
 
   deploy:
     machine:
       image: ubuntu-2204:2022.10.2
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - run: docker load -i /tmp/workspace/docker/image.tar
-      - run:
-          name: push to dockerhub
-          command: |
-            wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/circleci/push_docker.sh
-            bash push_docker.sh
+    - attach_workspace:
+        at: /tmp/workspace
+    - run: docker load -i /tmp/workspace/docker/image.tar
+    - run:
+        name: push to dockerhub
+        command: |
+          wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/circleci/push_docker.sh
+          bash push_docker.sh
 
 workflows:
   build-test-deploy:
     jobs:
-      - build:
-          filters:
-            tags:
-              only: /.*/
-      - test:
-          requires:
-            - build
-          matrix:
-            parameters:
-              dataset: ["1", "2"]
-          filters:
-            tags:
-              only: /.*/
-      - deploy:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
+    - build:
+        filters:
+          tags:
+            only: /.*/
+    - test:
+        requires:
+        - build
+        matrix:
+          parameters:
+            dataset: ['1', '2']
+        filters:
+          tags:
+            only: /.*/
+    - deploy:
+        requires:
+        - build
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /.*/
 # VS Code Extension Version: 1.5.1
