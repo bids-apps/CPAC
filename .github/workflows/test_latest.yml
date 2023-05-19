@@ -28,6 +28,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Clone repo
+      uses: actions/checkout@v3
     - name: pull docker image
       run: docker pull bids/c-pac:latest
     - name: get data
@@ -45,6 +47,7 @@ jobs:
           -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
           -v /tmp:/tmp \
           -v /var/tmp:/var/tmp \
+          -v ${PWD}:/cpac_resources/ \
             bids/c-pac \
               /bids_dataset /outputs participant \
                 --participant_label 01 \
@@ -58,6 +61,7 @@ jobs:
           -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
           -v /tmp:/tmp \
           -v /var/tmp:/var/tmp \
+          -v ${PWD}:/cpac_resources/ \
             bids/c-pac \
               /bids_dataset /outputs participant \
                 --participant_label 02 \
