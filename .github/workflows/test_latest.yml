@@ -23,6 +23,7 @@ jobs:
     strategy:
       matrix:
         dataset: ['1', '2']
+      fail-fast: false
 
     runs-on: ubuntu-latest
 
