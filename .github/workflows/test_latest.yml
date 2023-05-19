@@ -28,10 +28,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tree
+
     - name: Clone repo
       uses: actions/checkout@v3
+
     - name: pull docker image
       run: docker pull bids/c-pac:latest
+
     - name: get data
       run: |
         wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/utils/get_data_from_osf.sh
@@ -77,3 +84,6 @@ jobs:
           -v /var/tmp:/var/tmp \
             bids/c-pac \
               /bids_dataset /outputs group --n_cpus 2
+
+    - name: check output
+      run: tree ${HOME}/outputs${{ matrix.dataset }}
