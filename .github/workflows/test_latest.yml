@@ -1,0 +1,87 @@
+---
+name: test latest image
+
+on:
+  schedule:
+  - cron: 0 0 1 * *
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+
+  test_latest_image:
+
+    strategy:
+      matrix:
+        dataset: ['1', '2']
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tree
+
+    - name: Clone repo
+      uses: actions/checkout@v3
+
+    - name: pull docker image
+      run: docker pull bids/c-pac:latest
+
+    - name: get data
+      run: |
+        wget https://raw.githubusercontent.com/bids-apps/maintenance-tools/main/utils/get_data_from_osf.sh
+        bash get_data_from_osf.sh ds114_test${{ matrix.dataset }}
+
+    - name: prepare output dir
+      run: mkdir -p ${HOME}/outputs${{ matrix.dataset }}
+
+    - name: participant 01
+      run: |
+        docker run -t --rm --read-only \
+          -v ${HOME}data/ds114_test${{ matrix.dataset }}:/bids_dataset \
+          -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
+          -v /tmp:/tmp \
+          -v /var/tmp:/var/tmp \
+          -v ${PWD}:/cpac_resources/ \
+            bids/c-pac \
+              /bids_dataset /outputs participant \
+                --participant_label 01 \
+                --n_cpus 2 \
+                --pipeline_file /cpac_resources/test_pipeline.yaml
+
+    - name: participant 02
+      run: |
+        docker run -t --rm --read-only \
+          -v ${HOME}/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
+          -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
+          -v /tmp:/tmp \
+          -v /var/tmp:/var/tmp \
+          -v ${PWD}:/cpac_resources/ \
+            bids/c-pac \
+              /bids_dataset /outputs participant \
+                --participant_label 02 \
+                --n_cpus 2 \
+                --pipeline_file /cpac_resources/test_pipeline.yaml
+
+    - name: group
+      run: |
+        docker run -t --rm --read-only \
+          -v ${HOME}/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
+          -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
+          -v /tmp:/tmp \
+          -v /var/tmp:/var/tmp \
+            bids/c-pac \
+              /bids_dataset /outputs group --n_cpus 2
+
+    - name: check output
+      run: tree ${HOME}/outputs${{ matrix.dataset }}
