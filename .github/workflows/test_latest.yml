@@ -41,7 +41,7 @@ jobs:
     - name: participant 01
       run: |
         docker run -t --rm --read-only \
-          -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
+          -v ${HOME}data/ds114_test${{ matrix.dataset }}:/bids_dataset \
           -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
           -v /tmp:/tmp \
           -v /var/tmp:/var/tmp \
@@ -54,7 +54,7 @@ jobs:
     - name: participant 02
       run: |
         docker run -t --rm --read-only \
-          -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
+          -v ${HOME}/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
           -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
           -v /tmp:/tmp \
           -v /var/tmp:/var/tmp \
@@ -67,7 +67,7 @@ jobs:
     - name: group
       run: |
         docker run -t --rm --read-only \
-          -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
+          -v ${HOME}/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
           -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
           -v /tmp:/tmp \
           -v /var/tmp:/var/tmp \
