@@ -12,6 +12,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash -l {0}
+
 jobs:
 
   test_latest_image:
@@ -35,7 +39,7 @@ jobs:
 
     - name: participant 01
       run: |
-        docker run -ti --rm --read-only \
+        docker run -t --rm --read-only \
           -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
           -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
             bids/c-pac \
@@ -44,7 +48,7 @@ jobs:
 
     - name: participant 02
       run: |
-        docker run -ti --rm --read-only \
+        docker run -t --rm --read-only \
           -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
           -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
             bids/c-pac \
@@ -53,7 +57,7 @@ jobs:
 
     - name: group
       run: |
-        docker run -ti --rm --read-only \
+        docker run -t --rm --read-only \
           -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
           -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
             bids/c-pac \
