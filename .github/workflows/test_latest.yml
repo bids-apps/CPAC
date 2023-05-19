@@ -1,11 +1,12 @@
+---
 name: test latest image
 
 on:
-    push:
-      branches: ["*"]
-    pull_request:
-        branches:  ["*"]
-    workflow_dispatch:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['*']
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        dataset: ["1", "2"]
+        dataset: ['1', '2']
 
     runs-on: ubuntu-latest
 
@@ -34,26 +35,26 @@ jobs:
 
     - name: participant 01
       run: |
-          docker run -ti --rm --read-only \
-            -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
-            -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
-              bids/c-pac \
-                /bids_dataset /outputs participant --participant_label 01 --n_cpus 2 \
-                --pipeline_file /cpac_resources/test_pipeline.yaml
-                
+        docker run -ti --rm --read-only \
+          -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
+          -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
+            bids/c-pac \
+              /bids_dataset /outputs participant --participant_label 01 --n_cpus 2 \
+              --pipeline_file /cpac_resources/test_pipeline.yaml
+
     - name: participant 02
       run: |
-          docker run -ti --rm --read-only \
-            -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
-            -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
-              bids/c-pac \
-                /bids_dataset /outputs participant --participant_label 02 --n_cpus 2 \
-                --pipeline_file /cpac_resources/test_pipeline.yaml
+        docker run -ti --rm --read-only \
+          -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
+          -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
+            bids/c-pac \
+              /bids_dataset /outputs participant --participant_label 02 --n_cpus 2 \
+              --pipeline_file /cpac_resources/test_pipeline.yaml
 
     - name: group
       run: |
-          docker run -ti --rm --read-only \
-            -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
-            -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
-              bids/c-pac \
-                /bids_dataset /outputs group --n_cpus 2
+        docker run -ti --rm --read-only \
+          -v /tmp/workspace/data/ds114_test${{ matrix.dataset }}:/bids_dataset \
+          -v ${HOME}/outputs${{ matrix.dataset }}:/outputs \
+            bids/c-pac \
+              /bids_dataset /outputs group --n_cpus 2
