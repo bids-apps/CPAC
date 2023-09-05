@@ -1,7 +1,7 @@
 # C-PAC BIDS Application
 
 ## Documentation
-Extensive information can be found in the [C-PAC User Guide](http://fcp-indi.github.com/docs/user/index.html).
+Extensive information can be found in the [C-PAC User Guide](http://fcp-indi.github.io/docs/user/index.html).
 
 ## Description
 The Configurable Pipeline for the Analysis of Connectomes [C-PAC](http://fcp-indi.github.io) is a software for
